@@ -1,0 +1,37 @@
+# Byte-compiled and checkpoints
+__pycache__/
+.ipynb_checkpoints
+checkpoints*
+
+
+# Environments
+.env
+.venv
+env/
+venv/
+venvgpu/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# vscode
+.vscode/
+
+# mypy
+.mypy_cache/
+
+# PyCharm files
+.idea/*
+
+# Data files
+
+
+# Floydhub files
+.floydexpt
