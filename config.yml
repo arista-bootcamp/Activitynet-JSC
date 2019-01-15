@@ -4,3 +4,5 @@ temp_dir: '.temp'
 videos_folder: 'data/videos'
 
 shuffle: True
+skip_frames: 10
+resize: [224, 224]
