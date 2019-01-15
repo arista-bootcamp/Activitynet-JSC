@@ -38,3 +38,5 @@ models/
 # Floydhub files
 .floydexpt
 
+#mac files
+.DS_Store
