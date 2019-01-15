@@ -6,9 +6,17 @@ from IPython import display
 
 # Load video and yield frames
 def load_video(path, max_frames=15, resize=(224, 224)):
+    with open(json_data_path) as data_file:
+        data_json = json.load(data_file)
+
+    with open(json_metadata_path, 'r') as data_file:
+        metadata_json = json.load(data_file)
 
     cap = cv2.VideoCapture(path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = 0
     frames = []
+    labels = []
     try:
         while True:
             ret, frame = cap.read()
@@ -28,7 +36,7 @@ def load_video(path, max_frames=15, resize=(224, 224)):
 
 
 def all_data_videos(params):
-    
+
     list_videos = os.listdir(params['videos_folder'])
 
     if params['shuffle']:
@@ -46,4 +54,3 @@ def animate(images):
     imageio.mimsave('./animation.gif', converted_images, fps=30)
     with open('./animation.gif', 'rb') as f:
         display.display(display.Image(data=f.read(), height=300))
-
