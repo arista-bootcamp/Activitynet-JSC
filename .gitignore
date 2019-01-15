@@ -31,7 +31,7 @@ venv.bak/
 .idea/*
 
 # Data files
-
+.temp
 
 # Floydhub files
 .floydexpt
