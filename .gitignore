@@ -31,7 +31,10 @@ venv.bak/
 .idea/*
 
 # Data files
-
+data/
 
 # Floydhub files
 .floydexpt
+
+#mac files
+.DS_Store
