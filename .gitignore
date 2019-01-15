@@ -32,6 +32,7 @@ venv.bak/
 
 # Data files
 .temp
+data/
 
 # Floydhub files
 .floydexpt

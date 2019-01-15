@@ -1,13 +1,12 @@
 import cv2
-#import imageio
+import os
+import random
 import numpy as np
 from IPython import display
 
-VIDEO_PATH = 'videoplayback.mp4'
-
-
 # Load video and yield frames
-def load_video(path, max_frames=0, resize=(224, 224)):
+def load_video(path, max_frames=15, resize=(224, 224)):
+
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -26,6 +25,19 @@ def load_video(path, max_frames=0, resize=(224, 224)):
     finally:
         cap.release()
     yield np.array(frames) / 255.0
+
+
+def all_data_videos(params):
+    
+    list_videos = os.listdir(params['videos_folder'])
+
+    if params['shuffle']:
+        random.shuffle(list_videos)
+
+    for video in list_videos:
+        a = load_video(video)
+
+    return a
 
 
 # Generate GIF from video frames
