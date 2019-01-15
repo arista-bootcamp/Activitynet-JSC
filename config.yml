@@ -1,0 +1,6 @@
+# Directories for dataset and checkpoints
+data_dir: 'data'
+temp_dir: '.temp'
+videos_folder: 'data/videos'
+
+shuffle: True
