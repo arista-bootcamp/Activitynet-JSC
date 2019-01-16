@@ -61,14 +61,14 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 labels.append(label)
 
             if len(frames) == max_frames:
-                yield {'video': video_id, 'inputs': np.array(frames) / 255.0, 'labels': np.array(labels)}
+                yield (np.array(frames) / 255.0, np.array(labels))
                 frames = []
                 labels = []
 
     finally:
         cap.release()
 
-    yield {'video': video_id, 'inputs': np.array(frames) / 255.0, 'labels': np.array(labels)}
+    yield (np.array(frames) / 255.0, np.array(labels))
 
 
 def all_data_videos(params, mode='training'):
@@ -86,9 +86,17 @@ def all_data_videos(params, mode='training'):
                                       params['json_metadata_path'],
                                       params['classes_amount'],
                                       resize=params['resize'],
-                                      skip_frames=params['skip_frames'])
+                                      skip_frames=params['skip_frames'],
+                                      max_frames=1)
 
-            yield next(frames_video)
+            batch = next(frames_video)
+            batch_1 = batch[0].reshape(params['resize'][0],
+                                       params['resize'][1],
+                                       3)
+
+            batch_2 = batch[1].reshape(101)
+
+            yield (batch_1, batch_2)
 
         except StopIteration:
             print('Load next video')

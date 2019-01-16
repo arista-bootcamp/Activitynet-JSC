@@ -55,11 +55,14 @@ def dense_module(inputs):
 
 
 def model_fn(features, mode, params):
+	
+	pretrain_model = _initialize_pretrained_model()
+	inputs = pretrain_model.predict(features['inputs'])
 
 	if params['model'] == 'gap':
-		logits = gap_module(features['inputs'])
+		logits = gap_module(inputs)
 	else:
-		logits = dense_module(features['inputs'])
+		logits = dense_module(inputs)
 
 	y_pred = tf.argmax(input=logits, axis=1)
 	predictions = {
