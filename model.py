@@ -71,7 +71,8 @@ def model_fn(features, mode, params):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# Calculate Loss (for both TRAIN and EVAL modes)
-	loss = tf.losses.sparse_softmax_cross_entropy(labels=features['labels'], logits=logits)
+	loss = tf.losses.softmax_cross_entropy(onehot_labels=features['labels'],
+										   logits=logits)
 
 	if mode == tf.estimator.ModeKeys.TRAIN:
 
@@ -85,10 +86,13 @@ def model_fn(features, mode, params):
 
 		tf.summary.scalar('total_loss', tf.losses.get_total_loss())
 
-		tf.summary.scalar('accuracy', tf.metrics.accuracy(features['labels'], y_pred)[1])
+		tf.summary.scalar('accuracy', tf.metrics.accuracy(
+			tf.argmax(input=features['labels'], axis=1), y_pred)[1])
 
 		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-	eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=features['labels'], predictions=predictions["classes"])}
+	eval_metric_ops = {"accuracy": tf.metrics.accuracy(
+		labels=tf.argmax(input=features['labels'], axis=1),
+		predictions=predictions["classes"])}
 
 	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
