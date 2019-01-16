@@ -1,10 +1,11 @@
 import cv2
 import os
-import utils
-import imageio
-import random
-import numpy as np
 import json
+import utils
+import random
+import imageio
+import numpy as np
+import tensorflow as tf
 
 
 # Load video and yield frames
@@ -99,9 +100,29 @@ def animate(images, name):
     imageio.mimsave('./data/' + name + '.gif', converted_images, fps=30)
 
 
+def input_fn(data_gen, train, params):
+    data_set = tf.data.Dataset.from_generator(
+        generator=data_gen,
+        output_types=(tf.float32, tf.float32),
+        output_shapes=((params['resize'][0], params['resize'][1], 3),
+                       (params['classes_amount']))
+    )
+
+    if train:
+        # data_set = data_set.shuffle(buffer_size=cfg.SHUFFLE_BUFFER)
+        data_set = data_set.repeat(params['num_epochs'])
+
+    data_set = data_set.batch(params['batch_size'])
+
+    iterator = data_set.make_one_shot_iterator()
+    images_batch, labels_batch = iterator.get_next()
+
+    features = dict(inputs=images_batch, labels=labels_batch)
+
+    return features
+
+
 if __name__ == '__main__':
     params = utils.yaml_to_dict('config.yml')
     video_gen = all_data_videos(params)
-    frames = next(video_gen)
-    print('Frames skipped shape: ', frames['inputs'].shape)
-    print('Labels shape: ', frames['labels'].shape)
+    a = input_fn(lambda: video_gen, True, params)

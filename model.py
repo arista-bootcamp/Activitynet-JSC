@@ -11,30 +11,30 @@ def _initialize_pretrained_model(base_model_layer='conv_7b'):
 	model = Model(inputs=base_model.input, outputs=base_model.get_layer(base_model_layer).output)
 	return model
 
+
 def gap_module(inputs):
 
 	inputs = tf.convert_to_tensor(inputs)
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters= 101, 
+	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
 		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 		bias_initializer=tf.zeros_initializer()
 		)
 
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99,
-		epsilon=0.001, center=True,scale=True
-		)
+	x = tf.layers.batch_normalization(x, training=True, momentum=0.99, epsilon=0.001, center=True, scale=True )
 
 	x = tf.nn.sigmoid(x)
 
-	x = tf.math.reduce_mean(x,axis=[1,2])	
+	x = tf.math.reduce_mean(x, axis=[1, 2])
 
 	return x
+
 
 def dense_module(inputs):
 
 	inputs = tf.convert_to_tensor(inputs)
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters= 101, 
+	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
 		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 		bias_initializer=tf.zeros_initializer()
 		)
@@ -55,8 +55,6 @@ def dense_module(inputs):
 
 
 def model_fn(features, mode, params):
-
-	training = mode == tf.estimator.ModeKeys.TRAIN
 
 	if params['model'] == 'gap':
 		logits = gap_module(features['inputs'])
@@ -81,26 +79,16 @@ def model_fn(features, mode, params):
 
 		with tf.control_dependencies(update_ops):
 
-			optimizer = tf.train.AdamOptimizer(
-                learning_rate=params['learning_rate']
-            )
-            train_op = optimizer.minimize(
-                loss=loss,
-                global_step=tf.train.get_global_step()
-            )
+			optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
 
-        tf.summary.scalar('total_loss', tf.losses.get_total_loss())
+			train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
+
+		tf.summary.scalar('total_loss', tf.losses.get_total_loss())
+
 		tf.summary.scalar('accuracy', tf.metrics.accuracy(features['labels'], y_pred)[1])
 
 		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
+	eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=features['labels'], predictions=predictions["classes"])}
 
-	eval_metric_ops = {
-        "accuracy": tf.metrics.accuracy(
-            labels=features['labels'], predictions=predictions["classes"]
-        )
-    }
-
-    return tf.estimator.EstimatorSpec(
-    	mode=mode, loss=loss, 
-    	eval_metric_ops=eval_metric_ops)
+	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
