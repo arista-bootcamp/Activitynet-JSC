@@ -22,7 +22,6 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     frame_count = 0
     frames = []
     labels = []
-    count_frames = 0
     try:
         while True:
             ret, frame = cap.read()
@@ -31,13 +30,12 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 break
 
             if skip_frames:
-                if count_frames % skip_frames == 0:
+                if frame_count % skip_frames == 1:
                     label = np.zeros(classes_amount)
                     label[0] = 1
                     seconds = frame_count / fps
                     for item in data_json['database'][video_id]['annotations']:
-                        if seconds < item['segment'][1] and seconds > item[
-                                'segment'][0]:
+                        if seconds < item['segment'][1] and seconds > item['segment'][0]:
                             label[metadata_json[item['label']]['idx']] = 1
                             label[0] = 0
                             break
@@ -62,15 +60,14 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 labels.append(label)
 
             if len(frames) == max_frames:
-                yield (np.array(frames) / 255.0, np.array(labels))
+                yield {'video': video_id, 'inputs': np.array(frames) / 255.0, 'labels': np.array(labels)}
                 frames = []
                 labels = []
 
-            count_frames += 1
     finally:
         cap.release()
 
-    yield (np.array(frames) / 255.0, np.array(labels))
+    yield {'video': video_id, 'inputs': np.array(frames) / 255.0, 'labels': np.array(labels)}
 
 
 def all_data_videos(params, mode='training'):
@@ -90,7 +87,7 @@ def all_data_videos(params, mode='training'):
                                       resize=params['resize'],
                                       skip_frames=params['skip_frames'])
 
-            yield frames_video
+            yield next(frames_video)
 
         except StopIteration:
             print('Load next video')
@@ -105,4 +102,6 @@ def animate(images, name):
 if __name__ == '__main__':
     params = utils.yaml_to_dict('config.yml')
     video_gen = all_data_videos(params)
-    animate(next(video_gen), 'video1')
+    frames = next(video_gen)
+    print('Frames skipped shape: ', frames['inputs'].shape)
+    print('Labels shape: ', frames['labels'].shape)
