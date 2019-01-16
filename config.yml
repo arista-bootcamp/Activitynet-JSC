@@ -8,6 +8,11 @@ shuffle: True
 skip_frames: 10
 resize: [224, 224]
 
+classes_amount: 101
+
+json_data_path: 'data/activity_net.v1-2.min.json'
+json_metadata_path: 'data/training_meta_data.json'
+
 # Logging and summaries parameters
 eval_steps: 10
 keep_checkpoint_max: 3
