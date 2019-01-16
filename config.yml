@@ -1,4 +1,5 @@
 # Directories for dataset and checkpoints
+model_dir: '.temp/checkpoints'
 data_dir: 'data'
 temp_dir: '.temp'
 videos_folder: 'data/videos'
@@ -6,3 +7,20 @@ videos_folder: 'data/videos'
 shuffle: True
 skip_frames: 10
 resize: [224, 224]
+
+# Logging and summaries parameters
+eval_steps: 10
+keep_checkpoint_max: 3
+log_step_count_steps: 20
+save_checkpoints_steps: 20
+save_summary_steps: 20
+start_delay_secs: 10
+throttle_secs: 10
+
+# Parameters that may affect training
+model: 'gap'
+learning_rate: 0.0001
+max_steps: 21000
+batch_size: 3
+weight_factor: 8
+num_epochs: 1000
