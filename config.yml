@@ -3,10 +3,15 @@ model_dir: '.temp/checkpoints'
 data_dir: 'data'
 temp_dir: '.temp'
 videos_folder: 'data/videos'
+feature_map_folder: 'data/feature_maps'
 
 shuffle: True
 skip_frames: 10
+max_frames: [3]
 resize: [224, 224]
+
+feature_maps_size: [5, 5, 1536]
+label_feature_maps_size: [101]
 
 classes_amount: 101
 
@@ -28,4 +33,5 @@ learning_rate: 0.0001
 max_steps: 21000
 batch_size: 3
 weight_factor: 8
-num_epochs: 1000
+num_epochs: 5
+buffer_size: 50
