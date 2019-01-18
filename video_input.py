@@ -7,7 +7,6 @@ import imageio
 import numpy as np
 import tensorflow as tf
 
-
 # Load video and yield frames
 def load_video(path, json_data_path, json_metadata_path, classes_amount,
                max_frames=0, resize=(224, 224), skip_frames=None):
@@ -74,7 +73,7 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
 def all_data_videos(params, mode='training'):
 
     list_videos = os.listdir(params['videos_folder'] + '/' + mode)
-
+    
     if params['shuffle']:
         random.shuffle(list_videos)
 
@@ -87,16 +86,18 @@ def all_data_videos(params, mode='training'):
                                       params['classes_amount'],
                                       resize=params['resize'],
                                       skip_frames=params['skip_frames'],
-                                      max_frames=1)
+                                      max_frames=params['max_frames'][0])
 
             batch = next(frames_video)
+            """
             batch_1 = batch[0].reshape(params['resize'][0],
                                        params['resize'][1],
                                        3)
 
             batch_2 = batch[1].reshape(101)
+            """
 
-            yield (batch_1, batch_2)
+            yield (batch)
 
         except StopIteration:
             print('Load next video')
