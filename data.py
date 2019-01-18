@@ -24,6 +24,7 @@ class DataGenerator:
             try:
                 feature_map_path = os.path.join(self.feature_map_dir,item)
                 data_frame_label = _load_feature_map_from_npz(feature_map_path)
+                data_frame_label = _concat_frames_in_volume(data_frame_label)
             except TypeError:
                 pass
             yield data_frame_label
@@ -37,11 +38,28 @@ def _load_feature_map_from_npz(feature_map_path,):
     feature_map = np.load(feature_map_path)
     return(feature_map['feature_map'],feature_map['label'])
 
+def _concat_frames_in_volume(data_frame_label):
 
-def input_fn(data_gen,params,train):
+    feature_map = data_frame_label[0]
+    label = data_frame_label[1]
 
-    frames_expected_output =  np.concatenate((params['max_frames'],params['feature_maps_size']))
-    labels_expected_output =  np.concatenate((params['max_frames'],params['label_feature_maps_size']))
+    F, H, W, C = feature_map.shape
+    feature_map = np.resize(feature_map,(H,W,C*F))
+
+    F, C = label.shape
+    label = np.resize(label,(C*F))
+
+    return (feature_map,label)
+
+
+def input_fn(data_gen,train,params):
+
+    H, W, C = params['feature_maps_size']
+    L = params['label_feature_maps_size'][0]
+    F = params['max_frames'][0]
+
+    frames_expected_output = [H,W,C*F]
+    labels_expected_output = [L*F]
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
