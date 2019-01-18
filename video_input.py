@@ -73,7 +73,7 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
 def all_data_videos(params, mode='training'):
 
     list_videos = os.listdir(params['videos_folder'] + '/' + mode)
-
+    
     if params['shuffle']:
         random.shuffle(list_videos)
 
@@ -86,7 +86,7 @@ def all_data_videos(params, mode='training'):
                                       params['classes_amount'],
                                       resize=params['resize'],
                                       skip_frames=params['skip_frames'],
-                                      max_frames=3)
+                                      max_frames=params['max_frames'][0])
 
             batch = next(frames_video)
             """
