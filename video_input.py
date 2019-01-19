@@ -86,7 +86,7 @@ def all_data_videos(params, mode='training'):
                                       params['classes_amount'],
                                       resize=params['resize'],
                                       skip_frames=params['skip_frames'],
-                                      max_frames=15)
+                                      max_frames=params['max_frames'][0])
 
             while True:
                 try:
