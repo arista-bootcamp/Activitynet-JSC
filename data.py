@@ -72,12 +72,16 @@ def input_fn(data_gen,train,params):
         data_set = data_set.shuffle(buffer_size=params['buffer_size'])
         data_set = data_set.repeat(params['num_epochs'])
 
+
+    data_set = data_set.map(lambda features, labels: (tf.reshape(features, [-1]), labels))
+
     data_set = data_set.batch(params['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
     frames_batch, labels_batch = iterator.get_next()
 
-    print('*************SHAPE********',frames_batch.shape,labels_batch.shape)
+    print('*************FRAMES_BATCH********',frames_batch.shape)
+    print('*************LABELS_BATCH********',labels_batch.shape)
 
     features = dict(frames_batch=frames_batch, labels_batch=labels_batch)
 

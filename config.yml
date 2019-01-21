@@ -7,7 +7,7 @@ feature_map_folder: 'data/feature_maps'
 
 shuffle: True
 skip_frames: 10
-max_frames: [15]
+max_frames: [1]
 resize: [224, 224]
 
 feature_maps_size: [5, 5, 1536]
@@ -33,5 +33,11 @@ learning_rate: 0.0001
 max_steps: 21000
 batch_size: 2
 weight_factor: 8
-num_epochs: 20
+num_epochs: 5
 buffer_size: 50
+
+# LSTM Network
+cell_type: 'lstm'
+num_nodes: 2
+num_layers: 1
+dropout: 0.3
