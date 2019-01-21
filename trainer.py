@@ -53,8 +53,8 @@ def main(params):
 
 def main_fm(params):
 
-    data_gen_train = data.DataGenerator(params,'training')
-    data_gen_test = data.DataGenerator(params, 'testing')
+    data_gen_train = data.DataGenerator(params, 'training')
+    data_gen_test = data.DataGenerator(params, 'validation')
 
     estimator = tf.estimator.Estimator(
         # Custom model function

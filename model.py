@@ -14,8 +14,8 @@ def _initialize_pretrained_model(base_model_layer='conv_7b'):
 
 def gap_module(inputs):
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=1515,
-		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
+		padding='same', kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 		bias_initializer=tf.zeros_initializer()
 		)
 
@@ -98,15 +98,13 @@ def model_fn(features, mode, params):
 
 	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
-def fm_model_fn(features, mode, params):
 
-	inputs = features['frames_batch']
-	labels = features['labels_batch']
-	
+def fm_model_fn(features, labels, mode, params):
+
 	if params['model'] == 'gap':
-		logits = gap_module(inputs)
+		logits = gap_module(features)
 	else:
-		logits = dense_module(inputs)
+		logits = dense_module(features)
 
 	y_pred = tf.argmax(input=logits, axis=1)
 	predictions = {
@@ -120,8 +118,6 @@ def fm_model_fn(features, mode, params):
 	# Calculate Loss (for both TRAIN and EVAL modes)
 	loss = tf.losses.softmax_cross_entropy(onehot_labels=labels,
 										   logits=logits)
-
-	print('*************DESPUES DEL RESHAPE*******************',tf.shape(loss))
 
 	if mode == tf.estimator.ModeKeys.TRAIN:
 
