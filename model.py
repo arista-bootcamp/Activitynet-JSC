@@ -102,15 +102,10 @@ def dense_module(inputs, training):
 
 def fm_model_fn(features, labels, mode, params):
 
-	inputs = features['frames_batch']
-	labels = features['labels_batch']
-
 	if params['model'] == 'gap':
-		print('gap', mode)
-		logits = gap_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
+		logits = gap_module(features, mode == tf.estimator.ModeKeys.TRAIN)
 	else:
-		print('dense', mode)
-		logits = dense_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
+		logits = dense_module(features, mode == tf.estimator.ModeKeys.TRAIN)
 
 	y_pred = tf.argmax(input=logits, axis=1)
 	predictions = {
@@ -122,9 +117,6 @@ def fm_model_fn(features, labels, mode, params):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# Calculate Loss (for both TRAIN and EVAL modes)
-	labels = tf.reshape(labels, (-1, params['classes_amount']))
-	logits = tf.reshape(logits, (-1, params['classes_amount']))
-	print("lo que le entra al loss**********", labels.shape, logits.shape)
 	loss = tf.losses.softmax_cross_entropy(onehot_labels=labels,
 										   logits=logits)
 
