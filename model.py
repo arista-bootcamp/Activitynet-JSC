@@ -14,8 +14,8 @@ def _initialize_pretrained_model(base_model_layer='conv_7b'):
 
 def gap_module(inputs, training):
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=1515,
-		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
+	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
+		padding='same', kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 		bias_initializer=tf.zeros_initializer()
 		)
 
@@ -127,8 +127,6 @@ def fm_model_fn(features, labels, mode, params):
 	print("lo que le entra al loss**********", labels.shape, logits.shape)
 	loss = tf.losses.softmax_cross_entropy(onehot_labels=labels,
 										   logits=logits)
-
-	print('*************DESPUES DEL RESHAPE*******************',tf.shape(loss))
 
 	if mode == tf.estimator.ModeKeys.TRAIN:
 
