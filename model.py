@@ -12,14 +12,14 @@ def _initialize_pretrained_model(base_model_layer='conv_7b'):
 	return model
 
 
-def gap_module(inputs):
+def gap_module(inputs, training):
 
 	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=1515,
 		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
 		bias_initializer=tf.zeros_initializer()
 		)
 
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99, epsilon=0.001, center=True, scale=True )
+	x = tf.layers.batch_normalization(x, training=training, momentum=0.99, epsilon=0.001, center=True, scale=True )
 
 	x = tf.nn.sigmoid(x)
 
@@ -28,7 +28,7 @@ def gap_module(inputs):
 	return x
 
 
-def dense_module(inputs):
+def dense_module(inputs, training):
 
 	inputs = tf.convert_to_tensor(inputs)
 
@@ -37,7 +37,7 @@ def dense_module(inputs):
 		bias_initializer=tf.zeros_initializer()
 		)
 
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99,
+	x = tf.layers.batch_normalization(x, training=training, momentum=0.99,
 		epsilon=0.001, center=True,scale=True
 		)
 
@@ -52,61 +52,65 @@ def dense_module(inputs):
 	return x
 
 
-def model_fn(features, mode, params):
-	
-	pretrain_model = _initialize_pretrained_model()
-	inputs = pretrain_model.predict(features['inputs'])
+# def model_fn(features, mode, params):
+#
+# 	pretrain_model = _initialize_pretrained_model()
+# 	inputs = pretrain_model.predict(features['inputs'])
+#
+# 	if params['model'] == 'gap':
+# 		print('gap', mode)
+# 		logits = gap_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
+# 	else:
+# 		print('dense', mode)
+# 		logits = dense_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
+#
+# 	y_pred = tf.argmax(input=logits, axis=1)
+# 	predictions = {
+# 		"classes": y_pred,
+# 		"probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+# 	}
+#
+# 	if mode == tf.estimator.ModeKeys.PREDICT:
+# 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+#
+# 	# Calculate Loss (for both TRAIN and EVAL modes)
+# 	loss = tf.losses.softmax_cross_entropy(onehot_labels=features['labels'],
+# 										   logits=logits)
+#
+# 	if mode == tf.estimator.ModeKeys.TRAIN:
+#
+# 		update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+#
+# 		with tf.control_dependencies(update_ops):
+#
+# 			optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+#
+# 			train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
+#
+# 		tf.summary.scalar('total_loss', tf.losses.get_total_loss())
+#
+# 		tf.summary.scalar('accuracy', tf.metrics.accuracy(
+# 			tf.argmax(input=features['labels'], axis=1), y_pred)[1])
+#
+# 		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+#
+# 	eval_metric_ops = {"accuracy": tf.metrics.accuracy(
+# 		labels=tf.argmax(input=features['labels'], axis=1),
+# 		predictions=predictions["classes"])}
+#
+# 	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
-	if params['model'] == 'gap':
-		logits = gap_module(inputs)
-	else:
-		logits = dense_module(inputs)
-
-	y_pred = tf.argmax(input=logits, axis=1)
-	predictions = {
-		"classes": y_pred,
-		"probabilities": tf.nn.softmax(logits, name="softmax_tensor")
-	}
-
-	if mode == tf.estimator.ModeKeys.PREDICT:
-		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
-
-	# Calculate Loss (for both TRAIN and EVAL modes)
-	loss = tf.losses.softmax_cross_entropy(onehot_labels=features['labels'],
-										   logits=logits)
-
-	if mode == tf.estimator.ModeKeys.TRAIN:
-
-		update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-
-		with tf.control_dependencies(update_ops):
-
-			optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
-
-			train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
-
-		tf.summary.scalar('total_loss', tf.losses.get_total_loss())
-
-		tf.summary.scalar('accuracy', tf.metrics.accuracy(
-			tf.argmax(input=features['labels'], axis=1), y_pred)[1])
-
-		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
-
-	eval_metric_ops = {"accuracy": tf.metrics.accuracy(
-		labels=tf.argmax(input=features['labels'], axis=1),
-		predictions=predictions["classes"])}
-
-	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
-
-def fm_model_fn(features, mode, params):
+def fm_model_fn(features, labels, mode, params):
 
 	inputs = features['frames_batch']
 	labels = features['labels_batch']
-	
+
 	if params['model'] == 'gap':
-		logits = gap_module(inputs)
+		print('gap', mode)
+		logits = gap_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
 	else:
-		logits = dense_module(inputs)
+		print('dense', mode)
+		logits = dense_module(inputs, mode == tf.estimator.ModeKeys.TRAIN)
 
 	y_pred = tf.argmax(input=logits, axis=1)
 	predictions = {
@@ -118,6 +122,9 @@ def fm_model_fn(features, mode, params):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# Calculate Loss (for both TRAIN and EVAL modes)
+	labels = tf.reshape(labels, (-1, params['classes_amount']))
+	logits = tf.reshape(logits, (-1, params['classes_amount']))
+	print("lo que le entra al loss**********", labels.shape, logits.shape)
 	loss = tf.losses.softmax_cross_entropy(onehot_labels=labels,
 										   logits=logits)
 
