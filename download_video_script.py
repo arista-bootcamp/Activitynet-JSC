@@ -3,9 +3,7 @@ import sys
 import numpy as np
 import requests
 import json
-from pytube import YouTube
 import youtube_dl
-import cv2
 from os import listdir
 
 with open('./data/activity_net.v1-2.min.json') as data_file:
@@ -16,16 +14,22 @@ count_testing = 0
 count_validation = 0
 path = './data/videos'
 
+if not os.path.exists(path):
+    os.makedirs(path)
+
 for key, item in data["database"].items():
     count_training += item['subset'] == 'training'
     count_testing += item['subset'] == 'testing'
     count_validation += item['subset'] == 'validation'
 
-    if count_training == 1000:
+    if item['subset'] == 'testing':
+        continue
+
+    if count_training == 1500:
         break
 
     if not os.path.exists(path + '/' + item['subset']):
-        os.makedirs(path)
+        os.makedirs(path + '/' + item['subset'])
 
     if key + '.mkv' in os.listdir(path + '/' + item['subset']):
         print('video already downloaded')
