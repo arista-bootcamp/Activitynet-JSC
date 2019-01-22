@@ -51,6 +51,7 @@ def main(params):
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     # estimator.export_savedmodel(export_dir_base=params['model_dir'],serving_input_receiver_fn=serving_input_fn)
 
+
 def main_fm(params):
 
     data_gen_train = data.DataGenerator(params,'training')

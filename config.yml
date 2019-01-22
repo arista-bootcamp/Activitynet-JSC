@@ -7,7 +7,7 @@ feature_map_folder: 'data/feature_maps'
 
 shuffle: True
 skip_frames: 10
-max_frames: [1]
+max_frames: [15]
 resize: [224, 224]
 
 feature_maps_size: [5, 5, 1536]
