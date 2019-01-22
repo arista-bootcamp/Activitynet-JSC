@@ -11,21 +11,13 @@ def _initialize_pretrained_model(base_model_layer='conv_7b'):
 	model = Model(inputs=base_model.input, outputs=base_model.get_layer(base_model_layer).output)
 	return model
 
+def _add_fc_layer(inputs,):
 
-def gap_module(inputs):
+	tf.layers.dense(inputs=inputs,units=4096)
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=1515,
-		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-		bias_initializer=tf.zeros_initializer()
-		)
+	net = tf.layers.batch_normalization(net, training=training)
+	net = tf.nn.elu(net)
 
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99, epsilon=0.001, center=True, scale=True )
-
-	x = tf.nn.sigmoid(x)
-
-	x = tf.math.reduce_mean(x, axis=[1, 2])
-
-	return x
 
 
 def _add_regular_rnn_layers(inputs,params):
@@ -36,37 +28,15 @@ def _add_regular_rnn_layers(inputs,params):
 
 	return outputs;
 
-	"""Adds RNN layers.
-	if params['cell_type'] == 'lstm':
-		#cell = tf.nn.rnn_cell.BasicLSTMCell
-		cell = tf.nn.rnn_cell.LSTMCell 
-	elif params['cell_type'] == 'block_lstm':
-		cell = tf.contrib.rnn.LSTMBlockCell
-
-	cells_fw = [cell(params['num_nodes']) for _ in range(params['num_layers'])]
-	cells_bw = [cell(params['num_nodes']) for _ in range(params['num_layers'])]
-
-	if params['dropout'] > 0.0:
-		cells_fw = [tf.contrib.rnn.DropoutWrapper(cell) for cell in cells_fw]
-		cells_bw = [tf.contrib.rnn.DropoutWrapper(cell) for cell in cells_bw]
-
-	outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(
-        cells_fw=cells_fw,
-        cells_bw=cells_bw,
-        inputs=inputs,
-        dtype=tf.float32,
-        scope="rnn_classification")
-    
-    """
-
-def fm_model_fn(features, mode, params):
+def model_fn(features, mode, params):
 
 	inputs = features['frames_batch']
 	labels = features['labels_batch']
 	
 	print('************INPUTS.SHAPE*****',inputs.shape)
-	logits = _add_regular_rnn_layers(inputs,params)
 	print('************LOGITSS.SHAPE*****',logits.shape)
+
+	logits = _add_regular_rnn_layers(inputs,params)
 
 	y_pred = tf.argmax(input=logits, axis=1)
 	predictions = {
