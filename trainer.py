@@ -104,5 +104,5 @@ if __name__ == '__main__':
 
     tf.logging.info("Using parameters: {}".format(params))
 
-    #main(params)
+    # main(params)
     main_fm(params)
