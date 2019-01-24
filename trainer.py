@@ -13,43 +13,43 @@ import data as data
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
-def main(params):
+def main(parameters):
 
-    data_gen_train = data.DataGenerator(params, 'training')
-    data_gen_test = data.DataGenerator(params, 'testing')
+    data_gen_train = data.DataGenerator(parameters, 'training')
+    data_gen_test = data.DataGenerator(parameters, 'testing')
 
     estimator = tf.estimator.Estimator(
         # Custom model function
         model_fn=model.model_fn,
-        params=params,
+        params=parameters,
         # Model directory
-        model_dir=params['model_dir'],
+        model_dir=parameters['model_dir'],
         # warm_start_from=cfg.PRE_TRAIN,
         config=tf.estimator.RunConfig(
-            keep_checkpoint_max=params['keep_checkpoint_max'],
-            save_checkpoints_steps=params['save_checkpoints_steps'],
-            save_summary_steps=params['save_summary_steps'],
-            log_step_count_steps=params['log_step_count_steps']
+            keep_checkpoint_max=parameters['keep_checkpoint_max'],
+            save_checkpoints_steps=parameters['save_checkpoints_steps'],
+            save_summary_steps=parameters['save_summary_steps'],
+            log_step_count_steps=parameters['log_step_count_steps']
         )
     )
 
     train_spec = tf.estimator.TrainSpec(
-        lambda: data.input_fn(lambda: data_gen_train, True, params),
-        max_steps=params['max_steps']
+        lambda: data.input_fn(lambda: data_gen_train, True, parameters),
+        max_steps=parameters['max_steps']
     )
 
     eval_spec = tf.estimator.EvalSpec(
-        lambda: data.input_fn(lambda: data_gen_test, False, params),
-        steps=params['eval_steps'],
-        start_delay_secs=params['start_delay_secs'],
-        throttle_secs=params['throttle_secs']
+        lambda: data.input_fn(lambda: data_gen_test, False, parameters),
+        steps=parameters['eval_steps'],
+        start_delay_secs=parameters['start_delay_secs'],
+        throttle_secs=parameters['throttle_secs']
     )
 
     tf.logging.info("Start experiment....")
 
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-    estimator.export_savedmodel(export_dir_base=params['model_dir'],
-                                serving_input_receiver_fn=lambda: data.serving_input_fn(params))
+    estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
+                                serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
 
 
 if __name__ == '__main__':

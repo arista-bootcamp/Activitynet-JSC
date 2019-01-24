@@ -36,7 +36,7 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                     label[0] = 1
                     seconds = frame_count / fps
                     for item in data_json['database'][video_id]['annotations']:
-                        if seconds < item['segment'][1] and seconds > item['segment'][0]:
+                        if item['segment'][1] > seconds > item['segment'][0]:
                             label[metadata_json[item['label']]['idx']] = 1
                             label[0] = 0
                             break
@@ -50,7 +50,7 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 label[0] = 1
                 seconds = frame_count / fps
                 for item in data_json['database'][video_id]['annotations']:
-                    if seconds < item['segment'][1] and seconds > item['segment'][0]:
+                    if item['segment'][1] > seconds > item['segment'][0]:
                         label[metadata_json[item['label']]['idx']] = 1
                         label[0] = 0
                         break
@@ -71,23 +71,23 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     yield (np.array(frames) / 255.0, np.array(labels), video_id)
 
 
-def all_data_videos(params, mode='training'):
+def all_data_videos(parameters, mode='training'):
 
-    list_videos = os.listdir(params['videos_folder'] + '/' + mode)
+    list_videos = os.listdir(parameters['videos_folder'] + '/' + mode)
 
-    if params['shuffle']:
+    if parameters['shuffle']:
         random.shuffle(list_videos)
 
     for video in list_videos:
         try:
-            frames_video = load_video(os.path.join(params['videos_folder'],
+            frames_video = load_video(os.path.join(parameters['videos_folder'],
                                                    mode + '/' + video),
-                                      params['json_data_path'],
-                                      params['json_metadata_path'],
-                                      params['classes_amount'],
-                                      resize=params['resize'],
-                                      skip_frames=params['skip_frames'],
-                                      max_frames=params['max_frames'][0])
+                                      parameters['json_data_path'],
+                                      parameters['json_metadata_path'],
+                                      parameters['classes_amount'],
+                                      resize=parameters['resize'],
+                                      skip_frames=parameters['skip_frames'],
+                                      max_frames=parameters['max_frames'][0])
 
             while True:
                 try:
@@ -106,19 +106,19 @@ def animate(images, name):
     imageio.mimsave('./data/' + name + '.gif', converted_images, fps=30)
 
 
-def input_fn(data_gen, train, params):
+def input_fn(data_gen, train, parameters):
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
         output_types=(tf.float32, tf.float32),
-        output_shapes=((params['resize'][0], params['resize'][1], 3),
-                       (params['classes_amount']))
+        output_shapes=((parameters['resize'][0], parameters['resize'][1], 3),
+                       (parameters['classes_amount']))
     )
 
     if train:
         # data_set = data_set.shuffle(buffer_size=cfg.SHUFFLE_BUFFER)
-        data_set = data_set.repeat(params['num_epochs'])
+        data_set = data_set.repeat(parameters['num_epochs'])
 
-    data_set = data_set.batch(params['batch_size'])
+    data_set = data_set.batch(parameters['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
     images_batch, labels_batch = iterator.get_next()
