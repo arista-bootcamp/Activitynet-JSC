@@ -57,7 +57,11 @@ def _unique_tf(vol):
 
 def model_fn(features, mode, params):
     inputs = features['frames_batch']
-    labels = features['labels_batch']
+
+    if 'labels_batch' in features:
+        labels = features['labels_batch']
+    else:
+        labels = None
 
     training = mode == tf.estimator.ModeKeys.TRAIN
 

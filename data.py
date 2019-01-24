@@ -75,3 +75,13 @@ def input_fn(data_gen, train, params):
     features = dict(frames_batch=frames_batch, labels_batch=labels_batch)
 
     return features
+
+
+def serving_input_fn(params):
+    inputs = {'frames_batch': tf.placeholder(tf.float32, [None,
+                                                          params['feature_maps_size'][0],
+                                                          params['feature_maps_size'][1],
+                                                          params['feature_maps_size'][2]]
+                                             )}
+
+    return tf.estimator.export.ServingInputReceiver(inputs, inputs)
