@@ -50,6 +50,7 @@ def main(parameters):
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     # estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
     #                            serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
+    # print(next(estimator.predict(data_gen_test)))
 
 
 if __name__ == '__main__':
