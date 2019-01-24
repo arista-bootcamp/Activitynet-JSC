@@ -8,51 +8,12 @@ import argparse
 
 import model
 import utils
-import video_input as vi
 import data as data
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def main(params):
-
-    data_gen = vi.all_data_videos(params, 'training')
-    data_gen_test = vi.all_data_videos(params, 'validation')
-
-    estimator = tf.estimator.Estimator(
-        # Custom model function
-        model_fn=model.model_fn,
-        params=params,
-        # Model directory
-        model_dir=params['model_dir'],
-        # warm_start_from=cfg.PRE_TRAIN,
-        config=tf.estimator.RunConfig(
-            keep_checkpoint_max=params['keep_checkpoint_max'],
-            save_checkpoints_steps=params['save_checkpoints_steps'],
-            save_summary_steps=params['save_summary_steps'],
-            log_step_count_steps=params['log_step_count_steps']
-        )
-    )
-
-    train_spec = tf.estimator.TrainSpec(
-        lambda: vi.input_fn(lambda: data_gen, True, params),
-        max_steps=params['max_steps']
-    )
-
-    eval_spec = tf.estimator.EvalSpec(
-        lambda: vi.input_fn(lambda: data_gen_test, False, params),
-        steps=params['eval_steps'],
-        start_delay_secs=params['start_delay_secs'],
-        throttle_secs=params['throttle_secs']
-    )
-
-    tf.logging.info("Start experiment....")
-
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-    # estimator.export_savedmodel(export_dir_base=params['model_dir'],serving_input_receiver_fn=serving_input_fn)
-
-
-def main_fm(params):
 
     data_gen_train = data.DataGenerator(params, 'training')
     data_gen_test = data.DataGenerator(params, 'testing')
@@ -106,4 +67,4 @@ if __name__ == '__main__':
     tf.logging.info("Using parameters: {}".format(params))
 
     # main(params)
-    main_fm(params)
+    main(params)
