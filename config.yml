@@ -2,11 +2,11 @@
 model_dir: '.temp/checkpoints'
 data_dir: 'data'
 temp_dir: '.temp'
-videos_folder: 'data/videos'
+videos_folder: '/floyd/input/dataset/data/videos'
 feature_map_folder: 'data/feature_maps'
 
 shuffle: True
-skip_frames: 10
+skip_frames: 6
 max_frames: [15]
 resize: [224, 224]
 
@@ -16,7 +16,7 @@ label_feature_maps_size: [101]
 classes_amount: 101
 taxonomy_level: 2
 
-json_data_path: 'data/activity_net.v1-2.min.json'
+json_data_path: '/floyd/input/dataset/data/activity_net.v1-2.min.json'
 json_metadata_path: 'data/training_meta_data_reduced.json'
 
 # Logging and summaries parameters

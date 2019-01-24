@@ -3,13 +3,13 @@ import os
 import json
 import utils
 import random
-import imageio
 import numpy as np
 import tensorflow as tf
 
 # Load video and yield frames
 def load_video(path, json_data_path, json_metadata_path, classes_amount,
-               max_frames=0, resize=(224, 224), skip_frames=None):
+               taxonomy_level=3, max_frames=0, resize=(224, 224),
+               skip_frames=None):
     with open(json_data_path) as data_file:
         data_json = json.load(data_file)
 
@@ -22,6 +22,8 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     frame_count = 0
     frames = []
     labels = []
+    level_tax = 'level_' + str(taxonomy_level)
+    classes_amount = metadata_json['classes_amount'][level_tax] + 1
     try:
         while True:
             ret, frame = cap.read()
@@ -36,7 +38,11 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                     seconds = frame_count / fps
                     for item in data_json['database'][video_id]['annotations']:
                         if seconds < item['segment'][1] and seconds > item['segment'][0]:
-                            label[metadata_json[item['label']]['idx']] = 1
+                            tax_label = metadata_json[
+                                item['label']][level_tax][
+                                    'idx'] if taxonomy_level != 3 else metadata_json[
+                                        item['label']]['idx']
+                            label[tax_label] = 1
                             label[0] = 0
                             break
 
@@ -50,7 +56,11 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 seconds = frame_count / fps
                 for item in data_json['database'][video_id]['annotations']:
                     if seconds < item['segment'][1] and seconds > item['segment'][0]:
-                        label[metadata_json[item['label']]['idx']] = 1
+                        tax_label = metadata_json[
+                            item['label']][level_tax][
+                                'idx'] if taxonomy_level != 3 else metadata_json[
+                                    item['label']]['idx']
+                        label[tax_label] = 1
                         label[0] = 0
                         break
 
@@ -84,6 +94,7 @@ def all_data_videos(params, mode='training'):
                                       params['json_data_path'],
                                       params['json_metadata_path'],
                                       params['classes_amount'],
+                                      taxonomy_level=params['taxonomy_level'],
                                       resize=params['resize'],
                                       skip_frames=params['skip_frames'],
                                       max_frames=params['max_frames'][0])
@@ -98,11 +109,6 @@ def all_data_videos(params, mode='training'):
         except StopIteration:
             print('Load next video')
             continue
-
-
-def animate(images, name):
-    converted_images = np.clip(images * 255, 0, 255).astype(np.uint8)
-    imageio.mimsave('./data/' + name + '.gif', converted_images, fps=30)
 
 
 def input_fn(data_gen, train, params):
