@@ -41,4 +41,4 @@ cell_type: 'lstm'
 num_nodes: 2
 num_layers: 1
 dropout: 0.3
-predict_mode: 'last'
+predict_mode: 'mode'

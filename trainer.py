@@ -48,8 +48,8 @@ def main(parameters):
     tf.logging.info("Start experiment....")
 
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-    estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
-                                serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
+    # estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
+    #                            serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
 
 
 if __name__ == '__main__':
