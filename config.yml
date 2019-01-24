@@ -7,7 +7,7 @@ feature_map_folder: 'data/feature_maps'
 
 shuffle: True
 skip_frames: 10
-max_frames: [3]
+max_frames: [15]
 resize: [224, 224]
 
 feature_maps_size: [5, 5, 1536]
@@ -31,7 +31,14 @@ throttle_secs: 10
 model: 'gap'
 learning_rate: 0.0001
 max_steps: 21000
-batch_size: 3
+batch_size: 8
 weight_factor: 8
-num_epochs: 5
+num_epochs: 100
 buffer_size: 50
+
+# LSTM Network
+cell_type: 'lstm'
+num_nodes: 2
+num_layers: 1
+dropout: 0.3
+predict_mode: 'last'

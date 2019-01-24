@@ -1,101 +1,109 @@
-import os
-
+import numpy as np
 import tensorflow as tf
-
-from keras.applications.inception_resnet_v2 import InceptionResNetV2
 from keras.models import Model
+from keras.applications.inception_resnet_v2 import InceptionResNetV2
 
 
 def _initialize_pretrained_model(base_model_layer='conv_7b'):
-	base_model = InceptionResNetV2(weights='imagenet')
-	model = Model(inputs=base_model.input, outputs=base_model.get_layer(base_model_layer).output)
-	return model
+    base_model = InceptionResNetV2(weights='imagenet')
+    model = Model(inputs=base_model.input, outputs=base_model.get_layer(base_model_layer).output)
+    return model
 
 
-def gap_module(inputs):
+def _add_fc_layer(inputs, training):
+    """
+    # First FC Layer
+    model = tf.layers.dense(inputs=inputs, units=4096)
+    model = tf.layers.batch_normalization(model, training=training)
+    model = tf.nn.relu(model)
 
-	inputs = tf.convert_to_tensor(inputs)
+    # Second FC Layer
+    model = tf.layers.dense(inputs=model, units=4096)
+    model = tf.layers.batch_normalization(model, training=training)
+    model = tf.nn.relu(model)
+    """
+    # Third FC Layer
+    model = tf.layers.dense(inputs=inputs, units=1000)
+    model = tf.layers.batch_normalization(model, training=training)
+    model = tf.nn.relu(model)
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
-		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-		bias_initializer=tf.zeros_initializer()
-		)
-
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99, epsilon=0.001, center=True, scale=True )
-
-	x = tf.nn.sigmoid(x)
-
-	x = tf.math.reduce_mean(x, axis=[1, 2])
-
-	return x
+    return model
 
 
-def dense_module(inputs):
+def _add_regular_rnn_layers(inputs, params):
+    cell = tf.nn.rnn_cell.LSTMCell
 
-	inputs = tf.convert_to_tensor(inputs)
+    cells_fw = [cell(params['classes_amount']) for _ in range(params['num_layers'])]
 
-	x = tf.layers.conv2d(inputs=inputs, kernel_size=[5, 5], filters=101,
-		padding='same',kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-		bias_initializer=tf.zeros_initializer()
-		)
+    cells_bw = [cell(params['classes_amount']) for _ in range(params['num_layers'])]
 
-	x = tf.layers.batch_normalization(x, training=True, momentum=0.99,
-		epsilon=0.001, center=True,scale=True
-		)
+    outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw=cells_fw,
+                                                                   cells_bw=cells_bw,
+                                                                   inputs=inputs,
+                                                                   dtype=tf.float32,
+                                                                   scope="rnn_classification")
 
-	x = tf.nn.sigmoid(x)
+    fw, bw = tf.split(outputs, num_or_size_splits=2, name='split', axis=2)
+    output = tf.divide(tf.add(fw, bw), 2)
 
-	x = tf.reshape(x, [-1, 5 * 5 * 101])
+    return output
 
-	x = tf.layers.dense(inputs=x, units=101, activation=tf.nn.relu)
 
-	x = tf.layers.dense(inputs=x, units=101)
-
-	return x
+def _unique_tf(vol):
+    y, idx, count = tf.unique_with_counts(vol)
+    mode = y[tf.argmax(count)]
+    return mode
 
 
 def model_fn(features, mode, params):
-	
-	pretrain_model = _initialize_pretrained_model()
-	inputs = pretrain_model.predict(features['inputs'])
+    inputs = features['frames_batch']
+    labels = features['labels_batch']
 
-	if params['model'] == 'gap':
-		logits = gap_module(inputs)
-	else:
-		logits = dense_module(inputs)
+    training = mode == tf.estimator.ModeKeys.TRAIN
 
-	y_pred = tf.argmax(input=logits, axis=1)
-	predictions = {
-		"classes": y_pred,
-		"probabilities": tf.nn.softmax(logits, name="softmax_tensor")
-	}
+    print('*******INPUTS.SHAPE Before FC*******', inputs.shape)
+    fc_layers = _add_fc_layer(inputs, training)
+    print('*******INPUTS.SHAPE After FC*******', fc_layers.shape)
 
-	if mode == tf.estimator.ModeKeys.PREDICT:
-		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+    logits = _add_regular_rnn_layers(fc_layers, params)
+    print('*******LOGITS.SHAPE Before FC*******', logits.shape)
 
-	# Calculate Loss (for both TRAIN and EVAL modes)
-	loss = tf.losses.softmax_cross_entropy(onehot_labels=features['labels'],
-										   logits=logits)
+    probabilities = tf.nn.softmax(logits, axis=2, name="softmax_tensor")
 
-	if mode == tf.estimator.ModeKeys.TRAIN:
+    if params['predict_mode'] == 'last':
+        pass
+    elif params['predict_mode'] == 'mode':
+        pass
 
-		update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    y_pred = tf.map_fn(_unique_tf, tf.argmax(probabilities, axis=2))
 
-		with tf.control_dependencies(update_ops):
+    predictions = {
+        "classes": y_pred,
+        "probabilities": probabilities
+    }
 
-			optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-			train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
+    loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits)
 
-		tf.summary.scalar('total_loss', tf.losses.get_total_loss())
+    precision = tf.metrics.precision_at_thresholds(labels=labels,
+                                                   predictions=probabilities,
+                                                   thresholds=list(np.linspace(2 / 101, 10 / 101, 5)))
 
-		tf.summary.scalar('accuracy', tf.metrics.accuracy(
-			tf.argmax(input=features['labels'], axis=1), y_pred)[1])
+    mean_precision = tf.metrics.mean(precision)
 
-		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-	eval_metric_ops = {"accuracy": tf.metrics.accuracy(
-		labels=tf.argmax(input=features['labels'], axis=1),
-		predictions=predictions["classes"])}
+        with tf.control_dependencies(update_ops):
+            optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+            train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
 
-	return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        tf.summary.scalar('mean_precision_train', tf.math.reduce_mean(precision[1]))
+
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+
+    eval_metric_ops = {'precision': precision, 'mean_precision_eval': mean_precision}
+
+    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
