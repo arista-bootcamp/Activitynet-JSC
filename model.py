@@ -78,22 +78,22 @@ def model_fn(features, mode, params):
 
     training = mode == tf.estimator.ModeKeys.TRAIN
     fc_layers = _add_fc_layer(inputs, training)
-    logits = _add_regular_rnn_layers(fc_layers, params)
-
-    probabilities = tf.nn.softmax(logits, axis=2, name="softmax_tensor")
+    logits_pred = _add_regular_rnn_layers(fc_layers, params)
+    y_pred = None
+    probabilities = tf.nn.softmax(logits_pred, axis=2, name="softmax_tensor")
 
     if params['predict_mode'] == 'last':
-        logits = tf.map_fn(_get_frame, logits)
+        logits_pred = tf.map_fn(_get_frame, logits_pred)
 
         if labels is not None:
             labels = tf.map_fn(_get_frame, labels)
 
-        y_pred = tf.argmax(tf.nn.softmax(logits, axis=1))
+        y_pred = tf.argmax(tf.nn.softmax(logits_pred, axis=1))
 
     elif params['predict_mode'] == 'mode':
         y_pred = tf.map_fn(_unique_tf, tf.argmax(probabilities, axis=2))
         index_label = tf.map_fn(lambda x: _unique_tf(x, True), tf.argmax(probabilities, axis=2))
-        logits = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (logits, index_label))[0]
+        logits_pred = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (logits_pred, index_label))[0]
 
         if labels is not None:
             labels = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (labels, index_label))[0]
@@ -101,16 +101,16 @@ def model_fn(features, mode, params):
     predictions = {
         "classes": tf.one_hot(y_pred, depth=params['classes_amount']),
         "probabilities": probabilities,
-        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1)
+        "score": tf.reduce_max(tf.nn.softmax(logits_pred), axis=1)
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-    loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits)
+    loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits_pred)
 
     precision = tf.metrics.precision_at_thresholds(labels=labels,
-                                                   predictions=tf.nn.softmax(logits),
+                                                   predictions=tf.nn.softmax(logits_pred),
                                                    thresholds=list(np.linspace(2 / 101, 10 / 101, 5)))
 
     mean_precision = tf.metrics.mean(precision)
@@ -131,8 +131,8 @@ def model_fn(features, mode, params):
     return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
 
-def _slice_integer(vol, int):
-    return vol[int], int
+def _slice_integer(vol, integer):
+    return vol[integer], integer
 
 
 if __name__ == '__main__':
