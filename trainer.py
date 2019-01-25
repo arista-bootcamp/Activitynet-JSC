@@ -57,6 +57,7 @@ def main(parameters):
     return result
     """
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help="path to configuration file", default='config.yml')
@@ -72,7 +73,7 @@ if __name__ == '__main__':
     tf.logging.info("Using parameters: {}".format(params))
 
     # main(params)
-    results = main(params)
+    main(params)
     """
     data_gen_test = data.DataGenerator(params, 'testing')
 
