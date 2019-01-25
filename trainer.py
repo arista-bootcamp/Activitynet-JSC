@@ -72,7 +72,6 @@ if __name__ == '__main__':
 
     tf.logging.info("Using parameters: {}".format(params))
 
-    # main(params)
     main(params)
     """
     data_gen_test = data.DataGenerator(params, 'testing')
@@ -83,6 +82,10 @@ if __name__ == '__main__':
     metadata = {v['idx']: k for k, v in metadata.items() if k != 'classes_amount'}
 
     for result_batch in results:
-        print('Predicted Class: ', np.argmax(result_batch['classes']), '-', metadata[np.argmax(result_batch['classes'])])
+        print('Predicted Class: ', 
+              np.argmax(result_batch['classes']), 
+              '-', 
+              metadata[np.argmax(result_batch['classes'])])
+        
         print('Predicted Prob: ', result_batch['score'])
     """
