@@ -49,37 +49,59 @@ def _add_regular_rnn_layers(inputs, params):
     return output
 
 
-def _unique_tf(vol):
+def _unique_tf(vol, index=False):
     y, idx, count = tf.unique_with_counts(vol)
-    mode = y[tf.argmax(count)]
+    count_max = tf.argmax(count)
+    mode = y[count_max]
+    if index:
+        index_frame = tf.argmax(tf.cumsum(tf.cast(tf.equal(mode, vol), tf.int32)))
+        return index_frame
     return mode
+
+
+def _get_frame(vol, frame=None):
+    vol = tf.unstack(vol, axis=0)
+    if frame:
+        vol = vol[frame]
+    else:
+        vol = vol[len(vol) - 1]
+    return vol
 
 
 def model_fn(features, mode, params):
     inputs = features['frames_batch']
-    labels = features['labels_batch']
+
+    if 'labels_batch' in features:
+        labels = features['labels_batch']
+    else:
+        labels = None
 
     training = mode == tf.estimator.ModeKeys.TRAIN
-
-    print('*******INPUTS.SHAPE Before FC*******', inputs.shape)
     fc_layers = _add_fc_layer(inputs, training)
-    print('*******INPUTS.SHAPE After FC*******', fc_layers.shape)
-
     logits = _add_regular_rnn_layers(fc_layers, params)
-    print('*******LOGITS.SHAPE Before FC*******', logits.shape)
 
     probabilities = tf.nn.softmax(logits, axis=2, name="softmax_tensor")
 
     if params['predict_mode'] == 'last':
-        pass
-    elif params['predict_mode'] == 'mode':
-        pass
+        logits = tf.map_fn(_get_frame, logits)
 
-    y_pred = tf.map_fn(_unique_tf, tf.argmax(probabilities, axis=2))
+        if labels is not None:
+            labels = tf.map_fn(_get_frame, labels)
+
+        y_pred = tf.argmax(tf.nn.softmax(logits, axis=1))
+
+    elif params['predict_mode'] == 'mode':
+        y_pred = tf.map_fn(_unique_tf, tf.argmax(probabilities, axis=2))
+        index_label = tf.map_fn(lambda x: _unique_tf(x, True), tf.argmax(probabilities, axis=2))
+        logits = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (logits, index_label))[0]
+
+        if labels is not None:
+            labels = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (labels, index_label))[0]
 
     predictions = {
-        "classes": y_pred,
+        "classes": tf.one_hot(y_pred, depth=params['classes_amount']),
         "probabilities": probabilities,
+        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1),
         "metadata": features['metadata']
     }
 
@@ -89,7 +111,7 @@ def model_fn(features, mode, params):
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits)
 
     precision = tf.metrics.precision_at_thresholds(labels=labels,
-                                                   predictions=probabilities,
+                                                   predictions=tf.nn.softmax(logits),
                                                    thresholds=list(np.linspace(2 / 101, 10 / 101, 5)))
 
     mean_precision = tf.metrics.mean(precision)
@@ -108,3 +130,13 @@ def model_fn(features, mode, params):
     eval_metric_ops = {'precision': precision, 'mean_precision_eval': mean_precision}
 
     return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
+
+def _slice_integer(vol, int):
+    return vol[int], int
+
+
+if __name__ == '__main__':
+    tf.enable_eager_execution()
+    logits = tf.random.uniform((8, 15, 101))
+    print(logits)

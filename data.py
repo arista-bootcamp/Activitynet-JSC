@@ -47,19 +47,19 @@ def _concat_frames_in_volume(data_frame_label):
     feature_map = data_frame_label[0]
     label = data_frame_label[1]
 
-    F, H, W, C = feature_map.shape
-    feature_map = np.resize(feature_map, (H, W, C * F))
+    f, h, w, c = feature_map.shape
+    feature_map = np.resize(feature_map, (h, w, c * f))
 
-    F, C = label.shape
-    label = np.resize(label, (C * F))
+    f, c = label.shape
+    label = np.resize(label, (c * f))
 
     return feature_map, label
 
 
 def input_fn(data_gen, train, params):
-    H, W, C = params['feature_maps_size']
-    L = params['classes_amount']
-    F = params['max_frames'][0]
+    h, w, c = params['feature_maps_size']
+    m = params['classes_amount']
+    f = params['max_frames'][0]
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
@@ -82,8 +82,12 @@ def input_fn(data_gen, train, params):
     return features
 
 
-if __name__ == '__main__':
-    params = utils.yaml_to_dict('config.yml')
-    data_gen_train = DataGenerator(params, 'training')
-    a = next(iter(data_gen_train))
-    print(a)
+def serving_input_fn(params):
+    inputs = {'frames_batch': tf.placeholder(tf.float32, [None,
+                                                          params['max_frames'][0],
+                                                          params['feature_maps_size'][0] *
+                                                          params['feature_maps_size'][1] *
+                                                          params['feature_maps_size'][2]]
+                                             )}
+
+    return tf.estimator.export.ServingInputReceiver(inputs, inputs)

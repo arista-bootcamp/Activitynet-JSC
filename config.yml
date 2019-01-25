@@ -30,9 +30,16 @@ throttle_secs: 10
 
 # Parameters that may affect training
 model: 'gap'
-learning_rate: 0.0001
+learning_rate: 0.00001
 max_steps: 21000
-batch_size: 15
+batch_size: 16
 weight_factor: 8
-num_epochs: 20
+num_epochs: 500
 buffer_size: 50
+
+# LSTM Network
+cell_type: 'lstm'
+num_nodes: 2
+num_layers: 1
+dropout: 0.3
+predict_mode: 'mode'
