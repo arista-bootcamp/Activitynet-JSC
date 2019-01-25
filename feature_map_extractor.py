@@ -39,6 +39,9 @@ if not os.path.exists(params['data_dir'] + '/feature_maps/' + mode):
 for data in all_data_videos:
     steps_videos += data[2] != current_video
 
+    if steps_videos >= 200:
+        break
+
     if data[2] != current_video:
         print('current video: ', data[2])
 
@@ -61,6 +64,6 @@ for data in all_data_videos:
         batch_count += 1
         image_video_name = image_video_id + '_batch_' + str(batch_count) + '.npz'
         image_feature_path = os.path.join(
-            params['data_dir'] + '/feature_maps/training/', image_video_name)
+            params['data_dir'] + '/feature_maps/' + mode, image_video_name)
 
     np.savez(image_feature_path, feature_map=image_feature_map, label=image_label)

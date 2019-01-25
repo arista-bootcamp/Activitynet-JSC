@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import tensorflow as tf
 import numpy as np
 import utils
@@ -14,34 +15,35 @@ class DataGenerator:
     def __init__(self, params, mode='training'):
 
         self.mode = mode
-        self.feature_map_dir = os.path.join(params['feature_map_folder'],mode)
+        self.feature_map_dir = os.path.join(params['feature_map_folder'], mode)
         self.params = params
 
         self.feature_map_list = os.listdir(self.feature_map_dir)
 
     def __iter__(self):
         for item in self.feature_map_list:
+            images = labels = video_id = None
             try:
-                feature_map_path = os.path.join(self.feature_map_dir,item)
+                feature_map_path = os.path.join(self.feature_map_dir, item)
                 images, labels = _load_feature_map_from_npz(feature_map_path)
+                images = np.reshape(images, (15, -1))
+                video_id = item.split('.')[0]
                 # data_frame_label = _concat_frames_in_volume(data_frame_label)
             except TypeError:
                 pass
-            for image, label in zip(images, labels):
-                yield image, label
+
+            yield images, labels, video_id
 
     def __call__(self):
         return self
 
 
-def _load_feature_map_from_npz(feature_map_path,):
-
+def _load_feature_map_from_npz(feature_map_path):
     feature_map = np.load(feature_map_path)
     return feature_map['feature_map'], feature_map['label']
 
 
 def _concat_frames_in_volume(data_frame_label):
-
     feature_map = data_frame_label[0]
     label = data_frame_label[1]
 
@@ -55,18 +57,14 @@ def _concat_frames_in_volume(data_frame_label):
 
 
 def input_fn(data_gen, train, params):
-
     H, W, C = params['feature_maps_size']
-    L = params['label_feature_maps_size'][0]
+    L = params['classes_amount']
     F = params['max_frames'][0]
-
-    frames_expected_output = [H, W, C*F]
-    labels_expected_output = [L * F]
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
-        output_types=(tf.float32, tf.float32),
-        output_shapes=((H, W, C), (L,))
+        output_types=(tf.float32, tf.float32, tf.string),
+        output_shapes=((F, H * W * C), (F, L), ())
     )
 
     if train:
@@ -74,13 +72,14 @@ def input_fn(data_gen, train, params):
         data_set = data_set.repeat(params['num_epochs'])
 
     data_set = data_set.batch(params['batch_size'])
-    '''
-    iterator = data_set.make_one_shot_iterator()
-    frames_batch, labels_batch = iterator.get_next()
 
-    features = dict(frames_batch=frames_batch, labels_batch=labels_batch)
-    '''
-    return data_set
+    iterator = data_set.make_one_shot_iterator()
+    frames_batch, labels_batch, video_id = iterator.get_next()
+
+    features = dict(frames_batch=frames_batch, labels_batch=labels_batch,
+                    metadata=video_id)
+
+    return features
 
 
 if __name__ == '__main__':
@@ -88,4 +87,3 @@ if __name__ == '__main__':
     data_gen_train = DataGenerator(params, 'training')
     a = next(iter(data_gen_train))
     print(a)
-

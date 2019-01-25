@@ -51,6 +51,7 @@ def main(params):
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     # estimator.export_savedmodel(export_dir_base=params['model_dir'],serving_input_receiver_fn=serving_input_fn)
 
+
 def main_fm(params):
 
     data_gen_train = data.DataGenerator(params, 'training')
@@ -58,7 +59,7 @@ def main_fm(params):
 
     estimator = tf.estimator.Estimator(
         # Custom model function
-        model_fn=model.fm_model_fn,
+        model_fn=model.model_fn,
         params=params,
         # Model directory
         model_dir=params['model_dir'],
@@ -103,5 +104,5 @@ if __name__ == '__main__':
 
     tf.logging.info("Using parameters: {}".format(params))
 
-    #main(params)
+    # main(params)
     main_fm(params)

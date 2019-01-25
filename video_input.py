@@ -6,6 +6,7 @@ import random
 import numpy as np
 import tensorflow as tf
 
+
 # Load video and yield frames
 def load_video(path, json_data_path, json_metadata_path, classes_amount,
                taxonomy_level=3, max_frames=0, resize=(224, 224),
