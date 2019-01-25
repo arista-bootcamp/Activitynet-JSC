@@ -77,31 +77,31 @@ def model_fn(features, mode, params):
         labels = None
 
     training = mode == tf.estimator.ModeKeys.TRAIN
-
-    print('*******INPUTS.SHAPE Before FC*******', inputs.shape)
     fc_layers = _add_fc_layer(inputs, training)
-    print('*******INPUTS.SHAPE After FC*******', fc_layers.shape)
-
     logits = _add_regular_rnn_layers(fc_layers, params)
-    print('*******LOGITS.SHAPE Before FC*******', logits.shape)
+
+    probabilities = tf.nn.softmax(logits, axis=2, name="softmax_tensor")
 
     if params['predict_mode'] == 'last':
         logits = tf.map_fn(_get_frame, logits)
+
         if labels is not None:
             labels = tf.map_fn(_get_frame, labels)
-        probabilities = tf.nn.softmax(logits, axis=1, name="softmax_tensor")
-        y_pred = tf.argmax(probabilities)
+
+        y_pred = tf.argmax(tf.nn.softmax(logits, axis=1))
 
     elif params['predict_mode'] == 'mode':
-        probabilities = tf.nn.softmax(logits, axis=2, name="softmax_tensor")
         y_pred = tf.map_fn(_unique_tf, tf.argmax(probabilities, axis=2))
         index_label = tf.map_fn(lambda x: _unique_tf(x, True), tf.argmax(probabilities, axis=2))
         logits = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (logits, index_label))[0]
-        labels = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (labels, index_label))[0]
+
+        if labels is not None:
+            labels = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (labels, index_label))[0]
 
     predictions = {
         "classes": tf.one_hot(y_pred, depth=params['classes_amount']),
-        "probabilities": probabilities
+        "probabilities": probabilities,
+        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1)
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:

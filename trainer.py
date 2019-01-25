@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """
-Tensorflow YOLO Implementation Training and Evaluation
+Tensorflow ActivityNet Implementation Training and Evaluation
 """
 
-import tensorflow as tf
+import json
 import argparse
+import numpy as np
+import tensorflow as tf
 
 import model
 import utils
@@ -48,10 +50,12 @@ def main(parameters):
     tf.logging.info("Start experiment....")
 
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-    # estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
-    #                            serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
-    # print(next(estimator.predict(data_gen_test)))
-
+    estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
+                                serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
+    """
+    result = estimator.predict(lambda: data.input_fn(lambda: data_gen_test, False, parameters))
+    return result
+    """
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -68,4 +72,16 @@ if __name__ == '__main__':
     tf.logging.info("Using parameters: {}".format(params))
 
     # main(params)
-    main(params)
+    results = main(params)
+    """
+    data_gen_test = data.DataGenerator(params, 'testing')
+
+    with open('data/training_meta_data_reduced.json', 'r') as f:
+        metadata = json.load(f)
+
+    metadata = {v['idx']: k for k, v in metadata.items() if k != 'classes_amount'}
+
+    for result_batch in results:
+        print('Predicted Class: ', np.argmax(result_batch['classes']), '-', metadata[np.argmax(result_batch['classes'])])
+        print('Predicted Prob: ', result_batch['score'])
+    """

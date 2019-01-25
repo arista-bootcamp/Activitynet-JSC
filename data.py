@@ -79,8 +79,9 @@ def input_fn(data_gen, train, params):
 
 def serving_input_fn(params):
     inputs = {'frames_batch': tf.placeholder(tf.float32, [None,
-                                                          params['feature_maps_size'][0],
-                                                          params['feature_maps_size'][1],
+                                                          params['max_frames'][0],
+                                                          params['feature_maps_size'][0] *
+                                                          params['feature_maps_size'][1] *
                                                           params['feature_maps_size'][2]]
                                              )}
 
