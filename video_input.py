@@ -81,16 +81,16 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     yield (np.array(frames) / 255.0, np.array(labels), video_id)
 
 
-def all_data_videos(parameters, mode='training'):
+def all_data_videos(params, mode='training'):
 
-    list_videos = os.listdir(parameters['videos_folder'] + '/' + mode)
+    list_videos = os.listdir(params['videos_folder'] + '/' + mode)
 
-    if parameters['shuffle']:
+    if params['shuffle']:
         random.shuffle(list_videos)
 
     for video in list_videos:
         try:
-            frames_video = load_video(os.path.join(parameters['videos_folder'],
+            frames_video = load_video(os.path.join(params['videos_folder'],
                                                    mode + '/' + video),
                                       params['json_data_path'],
                                       params['json_metadata_path'],
@@ -116,15 +116,15 @@ def input_fn(data_gen, train, params):
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
         output_types=(tf.float32, tf.float32),
-        output_shapes=((parameters['resize'][0], parameters['resize'][1], 3),
-                       (parameters['classes_amount']))
+        output_shapes=((params['resize'][0], params['resize'][1], 3),
+                       (params['classes_amount']))
     )
 
     if train:
         # data_set = data_set.shuffle(buffer_size=cfg.SHUFFLE_BUFFER)
-        data_set = data_set.repeat(parameters['num_epochs'])
+        data_set = data_set.repeat(params['num_epochs'])
 
-    data_set = data_set.batch(parameters['batch_size'])
+    data_set = data_set.batch(params['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
     images_batch, labels_batch = iterator.get_next()

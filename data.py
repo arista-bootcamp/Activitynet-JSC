@@ -64,7 +64,7 @@ def input_fn(data_gen, train, params):
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
         output_types=(tf.float32, tf.float32, tf.string),
-        output_shapes=((F, H * W * C), (F, L), ())
+        output_shapes=((f, h * w * c), (f, m), ())
     )
 
     if train:
