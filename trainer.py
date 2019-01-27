@@ -3,9 +3,9 @@
 Tensorflow ActivityNet Implementation Training and Evaluation
 """
 
-import json
+# import json
 import argparse
-import numpy as np
+# import numpy as np
 import tensorflow as tf
 
 import model
@@ -16,8 +16,6 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def main(parameters):
-
-def main_fm(params):
 
     data_gen_train = data.DataGenerator(params, 'training')
     data_gen_test = data.DataGenerator(params, 'validation')
