@@ -37,6 +37,9 @@ models/
 
 # Floydhub files
 .floydexpt
+.floydignore
+floyd.yml
+floyd_requirements.txt
 
 #mac files
 .DS_Store
