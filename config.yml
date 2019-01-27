@@ -1,9 +1,9 @@
 # Directories for dataset and checkpoints
 model_dir: '.temp/checkpoints'
-data_dir: 'data'
+data_dir: '/floyd/input/dataset/data'
 temp_dir: '.temp'
-videos_folder: 'data/videos'
-feature_map_folder: 'data/feature_maps'
+videos_folder: '/floyd/input/dataset/data/videos'
+feature_map_folder: '/floyd/input/dataset/data/feature_maps'
 
 shuffle: True
 skip_frames: 6
