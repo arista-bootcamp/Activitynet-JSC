@@ -1,5 +1,7 @@
 import os
 import json
+import utils
+import argparse
 import numpy as np
 
 
@@ -19,8 +21,8 @@ def compute_ap(true_positive, false_positive):
     return true_positive / (true_positive + false_positive)
 
 
-def compute_map(clases_ap, params):
-    return sum(clases_ap.values()) / params['classes_amount']
+def compute_map(clases_ap, parameters):
+    return sum(clases_ap.values()) / parameters['classes_amount']
 
 
 def compute_classes_ap(clases_true_positive, clases_false_positive):
@@ -33,7 +35,7 @@ def compute_classes_ap(clases_true_positive, clases_false_positive):
     return clases_ap
 
 
-def compute_threshold_map(prediction, ground_truth, params):
+def compute_threshold_map(prediction, ground_truth, parameters):
     threshold_map = dict()
     thresholds = np.linspace(0.5, 0.95, num=10)
 
@@ -77,14 +79,14 @@ def compute_threshold_map(prediction, ground_truth, params):
                     clases_fp[predicted_label] = false_positive
 
         clases_ap = compute_classes_ap(clases_tp, clases_fp)
-        threshold_map[threshold_iou] = compute_map(clases_ap, params)
+        threshold_map[threshold_iou] = compute_map(clases_ap, parameters)
 
     return threshold_map
 
 
-def compute_average_map(params):
-    ground_truth_json = os.path.join(params['data_dir'], 'activity_net.v1-3.min.json')
-    prediction_json = os.path.join(params['data_dir'], 'sample_detection_prediction.json')
+def compute_average_map(parameters):
+    ground_truth_json = os.path.join(parameters['data_dir'], 'activity_net.v1-2.min.json')
+    prediction_json = os.path.join(parameters['data_dir'], 'sample_detection_prediction.json')
 
     with open(ground_truth_json, 'r') as file:
         ground_truth = json.load(file)
@@ -92,7 +94,21 @@ def compute_average_map(params):
     with open(prediction_json, 'r') as file:
         prediction = json.load(file)
 
-    threshold_map = compute_threshold_map(prediction, ground_truth, params)
+    threshold_map = compute_threshold_map(prediction, ground_truth, parameters)
     num_threshold = len(threshold_map)
 
     return sum(threshold_map.values()) / num_threshold
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', help="path to configuration file", default='config.yml')
+    parser.add_argument('-v', '--verbosity', default='INFO',
+                        choices=['DEBUG', 'ERROR', 'FATAL', 'INFO', 'WARM'],
+                        )
+
+    args = parser.parse_args()
+
+    params = utils.yaml_to_dict(args.config)
+
+    print(compute_average_map(params))
