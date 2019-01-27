@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import tensorflow as tf
+import numpy as np
+import utils
 
 
 class DataGenerator:
@@ -20,15 +22,17 @@ class DataGenerator:
 
     def __iter__(self):
         for item in self.feature_map_list:
-            images = labels = None
+            images = labels = video_id = None
             try:
                 feature_map_path = os.path.join(self.feature_map_dir, item)
                 images, labels = _load_feature_map_from_npz(feature_map_path)
                 images = np.reshape(images, (15, -1))
+                video_id = item.split('.')[0]
                 # data_frame_label = _concat_frames_in_volume(data_frame_label)
             except TypeError:
                 pass
-            yield images, labels
+
+            yield images, labels, video_id
 
     def __call__(self):
         return self
@@ -59,8 +63,8 @@ def input_fn(data_gen, train, params):
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
-        output_types=(tf.float32, tf.float32),
-        output_shapes=((f, h * w * c), (f, m))
+        output_types=(tf.float32, tf.float32, tf.string),
+        output_shapes=((f, h * w * c), (f, m), ())
     )
 
     if train:
@@ -70,9 +74,10 @@ def input_fn(data_gen, train, params):
     data_set = data_set.batch(params['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
-    frames_batch, labels_batch = iterator.get_next()
+    frames_batch, labels_batch, video_id = iterator.get_next()
 
-    features = dict(frames_batch=frames_batch, labels_batch=labels_batch)
+    features = dict(frames_batch=frames_batch, labels_batch=labels_batch,
+                    metadata=video_id)
 
     return features
 

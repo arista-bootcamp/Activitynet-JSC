@@ -3,14 +3,14 @@ import os
 import json
 import utils
 import random
-import imageio
 import numpy as np
 import tensorflow as tf
 
 
 # Load video and yield frames
 def load_video(path, json_data_path, json_metadata_path, classes_amount,
-               max_frames=0, resize=(224, 224), skip_frames=None):
+               taxonomy_level=3, max_frames=0, resize=(224, 224),
+               skip_frames=None):
     with open(json_data_path) as data_file:
         data_json = json.load(data_file)
 
@@ -23,6 +23,8 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     frame_count = 0
     frames = []
     labels = []
+    level_tax = 'level_' + str(taxonomy_level)
+    classes_amount = metadata_json['classes_amount'][level_tax] + 1
     try:
         while True:
             ret, frame = cap.read()
@@ -36,8 +38,12 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                     label[0] = 1
                     seconds = frame_count / fps
                     for item in data_json['database'][video_id]['annotations']:
-                        if item['segment'][1] > seconds > item['segment'][0]:
-                            label[metadata_json[item['label']]['idx']] = 1
+                        if seconds < item['segment'][1] and seconds > item['segment'][0]:
+                            tax_label = metadata_json[
+                                item['label']][level_tax][
+                                    'idx'] if taxonomy_level != 3 else metadata_json[
+                                        item['label']]['idx']
+                            label[tax_label] = 1
                             label[0] = 0
                             break
 
@@ -50,8 +56,12 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
                 label[0] = 1
                 seconds = frame_count / fps
                 for item in data_json['database'][video_id]['annotations']:
-                    if item['segment'][1] > seconds > item['segment'][0]:
-                        label[metadata_json[item['label']]['idx']] = 1
+                    if seconds < item['segment'][1] and seconds > item['segment'][0]:
+                        tax_label = metadata_json[
+                            item['label']][level_tax][
+                                'idx'] if taxonomy_level != 3 else metadata_json[
+                                    item['label']]['idx']
+                        label[tax_label] = 1
                         label[0] = 0
                         break
 
@@ -71,23 +81,24 @@ def load_video(path, json_data_path, json_metadata_path, classes_amount,
     yield (np.array(frames) / 255.0, np.array(labels), video_id)
 
 
-def all_data_videos(parameters, mode='training'):
+def all_data_videos(params, mode='training'):
 
-    list_videos = os.listdir(parameters['videos_folder'] + '/' + mode)
+    list_videos = os.listdir(params['videos_folder'] + '/' + mode)
 
-    if parameters['shuffle']:
+    if params['shuffle']:
         random.shuffle(list_videos)
 
     for video in list_videos:
         try:
-            frames_video = load_video(os.path.join(parameters['videos_folder'],
+            frames_video = load_video(os.path.join(params['videos_folder'],
                                                    mode + '/' + video),
-                                      parameters['json_data_path'],
-                                      parameters['json_metadata_path'],
-                                      parameters['classes_amount'],
-                                      resize=parameters['resize'],
-                                      skip_frames=parameters['skip_frames'],
-                                      max_frames=parameters['max_frames'][0])
+                                      params['json_data_path'],
+                                      params['json_metadata_path'],
+                                      params['classes_amount'],
+                                      taxonomy_level=params['taxonomy_level'],
+                                      resize=params['resize'],
+                                      skip_frames=params['skip_frames'],
+                                      max_frames=params['max_frames'][0])
 
             while True:
                 try:
@@ -101,24 +112,19 @@ def all_data_videos(parameters, mode='training'):
             continue
 
 
-def animate(images, name):
-    converted_images = np.clip(images * 255, 0, 255).astype(np.uint8)
-    imageio.mimsave('./data/' + name + '.gif', converted_images, fps=30)
-
-
-def input_fn(data_gen, train, parameters):
+def input_fn(data_gen, train, params):
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
         output_types=(tf.float32, tf.float32),
-        output_shapes=((parameters['resize'][0], parameters['resize'][1], 3),
-                       (parameters['classes_amount']))
+        output_shapes=((params['resize'][0], params['resize'][1], 3),
+                       (params['classes_amount']))
     )
 
     if train:
         # data_set = data_set.shuffle(buffer_size=cfg.SHUFFLE_BUFFER)
-        data_set = data_set.repeat(parameters['num_epochs'])
+        data_set = data_set.repeat(params['num_epochs'])
 
-    data_set = data_set.batch(parameters['batch_size'])
+    data_set = data_set.batch(params['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
     images_batch, labels_batch = iterator.get_next()

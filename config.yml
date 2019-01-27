@@ -6,7 +6,7 @@ videos_folder: 'data/videos'
 feature_map_folder: 'data/feature_maps'
 
 shuffle: True
-skip_frames: 10
+skip_frames: 6
 max_frames: [15]
 resize: [224, 224]
 
@@ -14,9 +14,10 @@ feature_maps_size: [5, 5, 1536]
 label_feature_maps_size: [101]
 
 classes_amount: 101
+taxonomy_level: 3
 
 json_data_path: 'data/activity_net.v1-2.min.json'
-json_metadata_path: 'data/training_meta_data.json'
+json_metadata_path: 'data/training_meta_data_reduced.json'
 
 # Logging and summaries parameters
 eval_steps: 10
@@ -31,7 +32,7 @@ throttle_secs: 10
 model: 'gap'
 learning_rate: 0.00001
 max_steps: 21000
-batch_size: 16
+batch_size: 15
 weight_factor: 8
 num_epochs: 500
 buffer_size: 50

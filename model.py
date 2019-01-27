@@ -99,9 +99,10 @@ def model_fn(features, mode, params):
             labels = tf.map_fn(lambda x: _slice_integer(x[0], x[1]), (labels, index_label))[0]
 
     predictions = {
-        "classes": tf.one_hot(y_pred, depth=params['classes_amount']),
+        "classes": y_pred,
         "probabilities": probabilities,
-        "score": tf.reduce_max(tf.nn.softmax(logits_pred), axis=1)
+        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1),
+        "metadata": features['metadata']
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
