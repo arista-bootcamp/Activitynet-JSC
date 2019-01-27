@@ -1,9 +1,9 @@
 # Directories for dataset and checkpoints
 model_dir: '.temp/checkpoints'
-data_dir: '/floyd/input/dataset/data'
+data_dir: '/floyd/input/datasets/data'
 temp_dir: '.temp'
-videos_folder: '/floyd/input/dataset/data/videos'
-feature_map_folder: '/floyd/input/dataset/data/feature_maps'
+videos_folder: '/floyd/input/datasets/data/videos'
+feature_map_folder: '/floyd/input/datasets/data/feature_maps'
 
 shuffle: True
 skip_frames: 6
@@ -13,7 +13,7 @@ resize: [224, 224]
 feature_maps_size: [5, 5, 1536]
 label_feature_maps_size: [101]
 
-classes_amount: 101
+classes_amount: 34
 taxonomy_level: 3
 
 json_data_path: 'data/activity_net.v1-2.min.json'
@@ -30,11 +30,11 @@ throttle_secs: 10
 
 # Parameters that may affect training
 model: 'gap'
-learning_rate: 0.00001
-max_steps: 21000
+learning_rate: 0.0001
+max_steps: 100000
 batch_size: 15
 weight_factor: 8
-num_epochs: 500
+num_epochs: 3000
 buffer_size: 50
 
 # LSTM Network

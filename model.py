@@ -100,7 +100,7 @@ def model_fn(features, mode, params):
     predictions = {
         "classes": y_pred,
         "probabilities": probabilities,
-        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1),
+        "score": tf.reduce_max(tf.nn.softmax(logits_pred), axis=1),
         "metadata": features['metadata']
     }
 
