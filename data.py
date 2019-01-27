@@ -30,6 +30,9 @@ class DataGenerator:
             except TypeError:
                 pass
 
+            if images.shape[1] < 38400:
+                continue
+
             yield images, labels, video_id
 
     def __call__(self):
