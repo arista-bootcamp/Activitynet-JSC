@@ -13,7 +13,7 @@ resize: [224, 224]
 feature_maps_size: [5, 5, 1536]
 label_feature_maps_size: [101]
 
-classes_amount: 101
+classes_amount: 33
 taxonomy_level: 3
 
 json_data_path: 'data/activity_net.v1-2.min.json'
