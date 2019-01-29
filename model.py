@@ -111,7 +111,9 @@ def model_fn(features, mode, params):
 
     precision = tf.metrics.precision_at_thresholds(labels=labels,
                                                    predictions=tf.nn.softmax(logits_pred),
-                                                   thresholds=list(np.linspace(2 / 101, 10 / 101, 5)))
+                                                   thresholds=list(np.linspace(2 / params['classes_amount'],
+                                                                               10 / params['classes_amount'],
+                                                                               5)))
 
     mean_precision = tf.metrics.mean(precision)
 
