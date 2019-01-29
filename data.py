@@ -1,8 +1,6 @@
 import os
-import numpy as np
 import tensorflow as tf
 import numpy as np
-import utils
 
 
 class DataGenerator:
@@ -31,6 +29,9 @@ class DataGenerator:
                 # data_frame_label = _concat_frames_in_volume(data_frame_label)
             except TypeError:
                 pass
+
+            if images.shape[1] < 38400:
+                continue
 
             yield images, labels, video_id
 

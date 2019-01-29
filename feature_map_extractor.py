@@ -1,17 +1,10 @@
-import cv2
 import os
 import sys
-
-import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
-import tensorflow_hub as hub
 
-from tensorflow.python import pywrap_tensorflow
-
-import video_input as vi
 import model as model
 import utils as utils
+import video_input as vi
 
 params = utils.yaml_to_dict('config.yml')
 
@@ -21,7 +14,7 @@ if mode not in ['training', 'validation', 'testing']:
     print('Not a valid mode')
     sys.exit()
 
-pretrain_model = model._initialize_pretrained_model()
+pretrain_model = model.initialize_pretrained_model()
 
 all_data_videos = vi.all_data_videos(params, mode=mode)
 
