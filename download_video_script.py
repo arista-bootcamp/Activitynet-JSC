@@ -1,10 +1,6 @@
 import os
-import sys
-import numpy as np
-import requests
 import json
 import youtube_dl
-from os import listdir
 
 with open('./data/activity_net.v1-2.min.json') as data_file:
     data = json.load(data_file)

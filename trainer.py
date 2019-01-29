@@ -3,9 +3,11 @@
 Tensorflow ActivityNet Implementation Training and Evaluation
 """
 
-import json
+# floyd run --gpu --env tensorflow-1.12 --data arista/datasets/featuremaps-jsc/1:datasets "python trainer.py"
+
+# import json
 import argparse
-import numpy as np
+# import numpy as np
 import tensorflow as tf
 
 import model
@@ -17,10 +19,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 def main(parameters):
 
-def main_fm(params):
-
     data_gen_train = data.DataGenerator(params, 'training')
-    data_gen_test = data.DataGenerator(params, 'validation')
+    # data_gen_test = data.DataGenerator(params, 'validation')
 
     estimator = tf.estimator.Estimator(
         # Custom model function
@@ -38,7 +38,7 @@ def main_fm(params):
     )
 
     train_spec = tf.estimator.TrainSpec(
-        lambda: data.input_fn(lambda: data_gen_train, True, parameters),
+        lambda: data.input_fn(data_gen_train, True, parameters),
         max_steps=parameters['max_steps']
     )
 
@@ -51,7 +51,8 @@ def main_fm(params):
 
     tf.logging.info("Start experiment....")
 
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    # tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    estimator.train(lambda: data.input_fn(data_gen_train, True, parameters))
     estimator.export_savedmodel(export_dir_base=parameters['model_dir'],
                                 serving_input_receiver_fn=lambda: data.serving_input_fn(parameters))
     """
