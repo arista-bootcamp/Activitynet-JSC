@@ -22,7 +22,7 @@ json_data_path: 'data/activity_net.v1-2.min.json'
 json_metadata_path: 'data/training_meta_data_reduced.json'
 
 # Logging and summaries parameters
-eval_steps: 10
+eval_steps: 1000
 keep_checkpoint_max: 3
 log_step_count_steps: 20
 save_checkpoints_steps: 20
