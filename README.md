@@ -15,6 +15,7 @@ Our objective with this project is to predict what kind of actions occurs in a s
 
 ### Project structure
 
+```
 - notebooks/
 	ScriptImageExtraction
 	ScriptTestInputFn
@@ -35,7 +36,7 @@ Our objective with this project is to predict what kind of actions occurs in a s
 - trainer.py
 - utils.py
 - video_input.py
-
+```
 
 ### How to execute the project with FloydHub
 
