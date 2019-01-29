@@ -34,6 +34,7 @@ venv.bak/
 data/
 models/
 .temp
+model_floyd
 
 # Floydhub files
 .floydexpt

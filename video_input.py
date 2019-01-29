@@ -131,9 +131,3 @@ def input_fn(data_gen, train, parameters):
     features = dict(inputs=images_batch, labels=labels_batch)
 
     return features
-
-
-if __name__ == '__main__':
-    params = utils.yaml_to_dict('config.yml')
-    video_gen = all_data_videos(params)
-    a = input_fn(lambda: video_gen, True, params)

@@ -1,12 +1,12 @@
 import os
 import tensorflow as tf
 import numpy as np
-import utils
 import cv2
 
-class my_str(str):
-    def __lt__(a,b):
-        a = a.split('.')[0]
+
+class MyStr(str):
+    def __lt__(self, b):
+        a = self.split('.')[0]
         b = b.split('.')[0]
         prefix_a = '_'.join([a.split('_')[0], a.split('_')[1]])
         prefix_b = '_'.join([b.split('_')[0], b.split('_')[1]])
@@ -14,8 +14,9 @@ class my_str(str):
             return int(a.split('_')[-1]) < int(b.split('_')[-1])
         else:
             return prefix_a < prefix_b
-    def __gt__(a,b):
-        a = a.split('.')[0]
+
+    def __gt__(self, b):
+        a = self.split('.')[0]
         b = b.split('.')[0]
         prefix_a = '_'.join([a.split('_')[0], a.split('_')[1]])
         prefix_b = '_'.join([b.split('_')[0], b.split('_')[1]])
@@ -24,8 +25,10 @@ class my_str(str):
         else:
             return prefix_a > prefix_b
 
+
 def mfunc(x):
-    return my_str(x)
+    return MyStr(x)
+
 
 class DataWindowGenerator:
     """ Reads several images and returns sliding windows.
@@ -40,18 +43,16 @@ class DataWindowGenerator:
 
     def __iter__(self):
         for item in self.feature_map_list:
-            images = labels = video_id = None
             try:
-                images = labels = video_id = None
                 for idx in range(0, self.params['batch_size']):
                     feature_map_path = os.path.join(self.feature_map_dir, item)
                     images, labels = _load_feature_map_from_npz(feature_map_path)
 
-                    video_id = item.split('.')[0]
                     batch_num = int(item.split('.')[0].split('_')[-1])
                     video_name = item.split('.')[0].split('batch')[0][:-1]
 
                     available_formats = ['.mkv', '.webm', '.mp4']
+                    video_path = vformat = None
                     for vformat in available_formats:
                         video_path = os.path.join(
                             self.params['videos_folder'], self.mode, video_name + vformat)
@@ -80,7 +81,7 @@ class DataWindowGenerator:
                         frame_number_ini = (
                             self.params['batch_size'] * (batch_num - 1) + idx) * 6
                         frame_number_end = (
-                            self.params['batch_size'] * (batch_num) + offset - 1) * 6
+                            self.params['batch_size'] * batch_num + offset - 1) * 6
                         metadata['segment'] = [frame_number_ini / fps,
                                                frame_number_end / fps]
 
@@ -102,9 +103,9 @@ class DataWindowGenerator:
             except TypeError:
                 pass
 
-
     def __call__(self):
         return self
+
 
 class DataGenerator:
     """Reads an image.

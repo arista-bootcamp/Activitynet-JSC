@@ -19,8 +19,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 def main(parameters):
 
-    data_gen_train = data.DataGenerator(params, 'training')
-    data_gen_test = data.DataGenerator(params, 'validation')
+    data_gen_train = data.DataWindowGenerator(params, 'training')
+    data_gen_test = data.DataWindowGenerator(params, 'validation')
 
     estimator = tf.estimator.Estimator(
         # Custom model function
