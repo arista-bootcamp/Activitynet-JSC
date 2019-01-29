@@ -35,11 +35,12 @@ def compute_classes_ap(clases_true_positive, clases_false_positive):
     return clases_ap
 
 
-def compute_threshold_map(prediction, ground_truth, metadata, params):
+def compute_threshold_map(prediction, ground_truth, metadata, parameters):
 
     threshold_map = dict()
     thresholds = np.linspace(0.5, 0.95, num=10)
-    
+    predicted_label = None
+
     for threshold_iou in thresholds:
         clases_fp = dict()
         clases_tp = dict()
@@ -108,7 +109,7 @@ def compute_average_map(parameters):
     with open(metadata_path, 'r') as file:
         metadata = json.load(file)
 
-    threshold_map = compute_threshold_map(prediction, ground_truth, metadata, params)
+    threshold_map = compute_threshold_map(prediction, ground_truth, metadata, parameters)
 
     num_threshold = len(threshold_map)
 
