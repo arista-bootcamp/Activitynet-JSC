@@ -86,3 +86,10 @@ floyd run --gpu --env tensorflow-1.12 --data arista/datasets/featuremaps-jsc/1:d
 * **global_step**: 58620
 * **loss**: 1.991
 * **mean_precision_train**: 0.3982
+
+
+### Validation
+
+For validation we computed de average mAP over classes. The amount of validation data for this case was 176 videos for which we produced the feature maps first with a pretrained network. The feature maps were feeded to the trained RNN and for each batch (15 frames) a predicted class was predicted. Even though for each frame the RNN gives one prediction, at the end we categorize each batch with the mode of the batch.
+
+Some of the challenges we face to compute this metric were that to fit the ActivityNet Challenge guidelines we had to produce a JSON file with the predictions in certain forma. In a first scenario we got several erros in the JSON file that lead us to have bad measurements over the avg mAP. Thus, after we addresed these errors we obtain a first avg mAP of 2%.
