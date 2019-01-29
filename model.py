@@ -4,14 +4,13 @@ from keras.models import Model
 from keras.applications.inception_resnet_v2 import InceptionResNetV2
 
 
-def _initialize_pretrained_model(base_model_layer='conv_7b'):
+def initialize_pretrained_model(base_model_layer='conv_7b'):
     base_model = InceptionResNetV2(weights='imagenet')
     model = Model(inputs=base_model.input, outputs=base_model.get_layer(base_model_layer).output)
     return model
 
 
 def _add_fc_layer(inputs, training):
-    """
     # First FC Layer
     model = tf.layers.dense(inputs=inputs, units=4096)
     model = tf.layers.batch_normalization(model, training=training)
@@ -21,9 +20,9 @@ def _add_fc_layer(inputs, training):
     model = tf.layers.dense(inputs=model, units=4096)
     model = tf.layers.batch_normalization(model, training=training)
     model = tf.nn.relu(model)
-    """
+
     # Third FC Layer
-    model = tf.layers.dense(inputs=inputs, units=1000)
+    model = tf.layers.dense(inputs=model, units=1000)
     model = tf.layers.batch_normalization(model, training=training)
     model = tf.nn.relu(model)
 
@@ -101,7 +100,7 @@ def model_fn(features, mode, params):
     predictions = {
         "classes": y_pred,
         "probabilities": probabilities,
-        "score": tf.reduce_max(tf.nn.softmax(logits), axis=1),
+        "score": tf.reduce_max(tf.nn.softmax(logits_pred), axis=1),
         "metadata": features['metadata']
     }
 
@@ -112,7 +111,9 @@ def model_fn(features, mode, params):
 
     precision = tf.metrics.precision_at_thresholds(labels=labels,
                                                    predictions=tf.nn.softmax(logits_pred),
-                                                   thresholds=list(np.linspace(2 / 101, 10 / 101, 5)))
+                                                   thresholds=list(np.linspace(2 / params['classes_amount'],
+                                                                               10 / params['classes_amount'],
+                                                                               5)))
 
     mean_precision = tf.metrics.mean(precision)
 

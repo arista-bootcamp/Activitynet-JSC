@@ -1,9 +1,6 @@
 import os
-import sys
-import json
-
 import cv2
-import matplotlib.pyplot as plt
+import json
 import numpy as np
 import tensorflow as tf
 
@@ -47,7 +44,7 @@ estimator = tf.estimator.Estimator(
 )
 
 predictions = estimator.predict(
-    input_fn = lambda: data.input_fn(data_gen_test, False, params)
+    input_fn=lambda: data.input_fn(data_gen_test, False, params)
 )
 
 prediction_results = {
@@ -56,12 +53,16 @@ prediction_results = {
 available_formats = ['.mkv', '.webm', '.mp4']
 predictions_by_video = {}
 
+frame_difference = None
+
 for item in predictions:
     video_id = item['metadata'].decode('utf-8')
     batch_num = int(video_id.split('batch')[-1].replace('_', ''))
     video_id = video_id.split('batch')[0].replace('_', '')
     if video_id not in prediction_results['results']:
         prediction_results['results'][video_id] = {}
+
+    video_path = None
 
     for vformat in available_formats:
         video_path = os.path.join(params['videos_folder'] + '/validation', video_id + vformat)

@@ -36,6 +36,7 @@ def compute_classes_ap(clases_true_positive, clases_false_positive):
 
 
 def compute_threshold_map(prediction, ground_truth, metadata, params):
+
     threshold_map = dict()
     thresholds = np.linspace(0.5, 0.95, num=10)
     
@@ -93,9 +94,9 @@ def compute_threshold_map(prediction, ground_truth, metadata, params):
     return threshold_map
 
 
-def compute_average_map(params):
-    ground_truth_json = params['json_data_path']
-    prediction_json = os.path.join(params['data_dir'], 'predicted_output.json')
+def compute_average_map(parameters):
+    ground_truth_json = parameters['json_data_path']
+    prediction_json = os.path.join(parameters['data_dir'], 'predicted_output.json')
     metadata_path = params['json_metadata_path']
 
     with open(ground_truth_json, 'r') as file:
