@@ -57,8 +57,8 @@ def compute_threshold_map(prediction, ground_truth, metadata, params):
                     
                     if predicted_label == metadata_label:
 
-                        min_1 = predicted_segment['segment'][0]
-                        max_1 = predicted_segment['segment'][1]
+                        min_1 = predicted_segment['segment'][0][0]
+                        max_1 = predicted_segment['segment'][0][1]
 
                         min_2 = ground_truth_key[list_indice]['segment'][0]
                         max_2 = ground_truth_key[list_indice]['segment'][1]
