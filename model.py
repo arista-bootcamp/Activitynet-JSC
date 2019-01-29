@@ -101,7 +101,9 @@ def model_fn(features, mode, params):
         "classes": y_pred,
         "probabilities": probabilities,
         "score": tf.reduce_max(tf.nn.softmax(logits_pred), axis=1),
-        "metadata": features['metadata']
+        "metadata": features['metadata'],
+        "ini": features['ini'],
+        "end": features['end']
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:

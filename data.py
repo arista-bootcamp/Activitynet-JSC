@@ -1,7 +1,110 @@
 import os
 import tensorflow as tf
 import numpy as np
+import utils
+import cv2
 
+class my_str(str):
+    def __lt__(a,b):
+        a = a.split('.')[0]
+        b = b.split('.')[0]
+        prefix_a = '_'.join([a.split('_')[0], a.split('_')[1]])
+        prefix_b = '_'.join([b.split('_')[0], b.split('_')[1]])
+        if prefix_a == prefix_b:
+            return int(a.split('_')[-1]) < int(b.split('_')[-1])
+        else:
+            return prefix_a < prefix_b
+    def __gt__(a,b):
+        a = a.split('.')[0]
+        b = b.split('.')[0]
+        prefix_a = '_'.join([a.split('_')[0], a.split('_')[1]])
+        prefix_b = '_'.join([b.split('_')[0], b.split('_')[1]])
+        if prefix_a == prefix_b:
+            return int(a.split('_')[-1]) < int(b.split('_')[-1])
+        else:
+            return prefix_a > prefix_b
+
+def mfunc(x):
+    return my_str(x)
+
+class DataWindowGenerator:
+    """ Reads several images and returns sliding windows.
+    """
+    def __init__(self, params, mode='training'):
+
+        self.mode = mode
+        self.feature_map_dir = os.path.join(params['feature_map_folder'], mode)
+        self.params = params
+        self.feature_map_list = map(mfunc, os.listdir(self.feature_map_dir))
+        self.feature_map_list = sorted(self.feature_map_list)
+
+    def __iter__(self):
+        for item in self.feature_map_list:
+            images = labels = video_id = None
+            try:
+                images = labels = video_id = None
+                for idx in range(0, self.params['batch_size']):
+                    feature_map_path = os.path.join(self.feature_map_dir, item)
+                    images, labels = _load_feature_map_from_npz(feature_map_path)
+
+                    video_id = item.split('.')[0]
+                    batch_num = int(item.split('.')[0].split('_')[-1])
+                    video_name = item.split('.')[0].split('batch')[0][:-1]
+
+                    available_formats = ['.mkv', '.webm', '.mp4']
+                    for vformat in available_formats:
+                        video_path = os.path.join(
+                            self.params['videos_folder'], self.mode, video_name + vformat)
+                        if os.path.isfile(video_path):
+                            break
+
+                    cap = cv2.VideoCapture(video_path)
+                    fps = cap.get(cv2.CAP_PROP_FPS)
+                    metadata = {
+                        'video_id': video_name + vformat
+                    }
+                    if idx + self.params['window_size'] > images.shape[0]:
+                        next_fmap_name = video_name + '_' + 'batch_' + str(
+                            batch_num + 1) + '.npz'
+                        if not os.path.isfile(os.path.join(
+                                self.feature_map_dir, next_fmap_name)):
+                            break
+
+                        images_next, labels_next = _load_feature_map_from_npz(
+                            feature_map_path)
+                        offset = self.params['window_size'] - (images.shape[0] - idx)
+                        images = np.concatenate((images[idx:images.shape[0], :],
+                                                 images_next[0:offset, :]), axis=0)
+                        labels = np.concatenate((labels[idx:images.shape[0], :],
+                                                 labels_next[0:offset, :]), axis=0)
+                        frame_number_ini = (
+                            self.params['batch_size'] * (batch_num - 1) + idx) * 6
+                        frame_number_end = (
+                            self.params['batch_size'] * (batch_num) + offset - 1) * 6
+                        metadata['segment'] = [frame_number_ini / fps,
+                                               frame_number_end / fps]
+
+                    else:
+                        images = images[idx:idx+self.params['window_size'], :]
+                        labels = labels[idx:idx+self.params['window_size'], :]
+                        frame_number_ini = (
+                            self.params['batch_size'] * (batch_num - 1) + idx) * 6
+                        frame_number_end = (
+                            self.params['batch_size'] * (
+                                batch_num - 1) + idx + self.params['window_size'] - 1) * 6
+                        metadata['segment'] = [frame_number_ini / fps, frame_number_end / fps]
+
+                    images = np.reshape(images, (15, -1))
+                    if images.shape[1] < 38400:
+                        continue
+                    yield images, labels, metadata['video_id'], metadata['segment'][0], metadata['segment'][1]
+
+            except TypeError:
+                pass
+
+
+    def __call__(self):
+        return self
 
 class DataGenerator:
     """Reads an image.
@@ -33,7 +136,7 @@ class DataGenerator:
             if images.shape[1] < 38400:
                 continue
 
-            yield images, labels, video_id
+            yield images, labels, video_id, 0, 0
 
     def __call__(self):
         return self
@@ -64,8 +167,8 @@ def input_fn(data_gen, train, params):
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
-        output_types=(tf.float32, tf.float32, tf.string),
-        output_shapes=((f, h * w * c), (f, m), ())
+        output_types=(tf.float32, tf.float32, tf.string, tf.float32, tf.float32),
+        output_shapes=((f, h * w * c), (f, m), (), (), ())
     )
 
     if train:
@@ -75,10 +178,10 @@ def input_fn(data_gen, train, params):
     data_set = data_set.batch(params['batch_size'])
 
     iterator = data_set.make_one_shot_iterator()
-    frames_batch, labels_batch, video_id = iterator.get_next()
+    frames_batch, labels_batch, metadata, ini, end = iterator.get_next()
 
     features = dict(frames_batch=frames_batch, labels_batch=labels_batch,
-                    metadata=video_id)
+                    metadata=metadata, ini=ini, end=end)
 
     return features
 

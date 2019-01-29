@@ -7,6 +7,8 @@ feature_map_folder: 'data/feature_maps' # '/floyd/input/datasets/data/feature_ma
 
 shuffle: True
 skip_frames: 6
+window_size: 15
+data_generator: windows
 max_frames: [15]
 resize: [224, 224]
 
