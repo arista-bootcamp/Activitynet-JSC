@@ -7,14 +7,16 @@ feature_map_folder: 'data/feature_maps'
 
 shuffle: True
 skip_frames: 6
+window_size: 15
+data_generator: windows
 max_frames: [15]
 resize: [224, 224]
 
 feature_maps_size: [5, 5, 1536]
 label_feature_maps_size: [101]
 
-classes_amount: 101
-taxonomy_level: 3
+classes_amount: 34
+taxonomy_level: 2
 
 json_data_path: 'data/activity_net.v1-2.min.json'
 json_metadata_path: 'data/training_meta_data_reduced.json'
