@@ -36,6 +36,7 @@ model: 'gap'
 learning_rate: 0.0001
 max_steps: 100000
 batch_size: 15
+batch_size_tf: 32
 weight_factor: 8
 num_epochs: 3000
 buffer_size: 50
@@ -43,6 +44,6 @@ buffer_size: 50
 # LSTM Network
 cell_type: 'lstm'
 num_nodes: 2
-num_layers: 4
+num_layers: 1
 dropout: 0.3
 predict_mode: 'last'

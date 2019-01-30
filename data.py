@@ -80,10 +80,12 @@ class DataWindowGenerator:
                         images_next, labels_next = _load_feature_map_from_npz(
                             feature_map_path)
                         offset = self.params['window_size'] - (images.shape[0] - idx)
+
                         images = np.concatenate((images[idx:images.shape[0], :],
                                                  images_next[0:offset, :]), axis=0)
-                        labels = np.concatenate((labels[idx:images.shape[0], :],
+                        labels = np.concatenate((labels[idx:labels.shape[0], :],
                                                  labels_next[0:offset, :]), axis=0)
+
                         frame_number_ini = (
                             self.params['batch_size'] * (batch_num - 1) + idx) * 6
                         frame_number_end = (
@@ -94,6 +96,7 @@ class DataWindowGenerator:
                     else:
                         images = images[idx:idx+self.params['window_size'], :]
                         labels = labels[idx:idx+self.params['window_size'], :]
+
                         frame_number_ini = (
                             self.params['batch_size'] * (batch_num - 1) + idx) * 6
                         frame_number_end = (
@@ -101,7 +104,7 @@ class DataWindowGenerator:
                                 batch_num - 1) + idx + self.params['window_size'] - 1) * 6
                         metadata['segment'] = [frame_number_ini / fps, frame_number_end / fps]
 
-                    images = np.reshape(images, (15, -1))
+                    images = np.reshape(images, (self.params['window_size'], -1))
                     if images.shape[1] < 38400:
                         continue
                     yield images, labels, metadata['video_id'], metadata['segment'][0], metadata['segment'][1]
@@ -182,7 +185,7 @@ def input_fn(data_gen, train, params):
         data_set = data_set.shuffle(buffer_size=params['buffer_size'])
         data_set = data_set.repeat(params['num_epochs'])
 
-    data_set = data_set.batch(params['batch_size'])
+    data_set = data_set.batch(params['batch_size_tf'])
 
     iterator = data_set.make_one_shot_iterator()
     frames_batch, labels_batch, metadata, ini, end = iterator.get_next()
@@ -195,7 +198,7 @@ def input_fn(data_gen, train, params):
 
 def serving_input_fn(params):
     inputs = {'frames_batch': tf.placeholder(tf.float32, [None,
-                                                          params['max_frames'][0],
+                                                          params['window_size'],
                                                           params['feature_maps_size'][0] *
                                                           params['feature_maps_size'][1] *
                                                           params['feature_maps_size'][2]]
