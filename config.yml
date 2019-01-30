@@ -33,10 +33,10 @@ throttle_secs: 10
 
 # Parameters that may affect training
 model: 'gap'
-learning_rate: 0.0001
-max_steps: 100000
+learning_rate: 0.001
+max_steps: 1000000
 batch_size: 15
-batch_size_tf: 32
+batch_size_tf: 128
 weight_factor: 8
 num_epochs: 3000
 buffer_size: 50

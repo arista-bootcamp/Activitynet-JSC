@@ -181,11 +181,11 @@ def input_fn(data_gen, train, params):
         output_shapes=((f, h * w * c), (f, m), (), (), ())
     )
 
+    data_set = data_set.batch(params['batch_size_tf'])
+
     if train:
         data_set = data_set.shuffle(buffer_size=params['buffer_size'])
         data_set = data_set.repeat(params['num_epochs'])
-
-    data_set = data_set.batch(params['batch_size_tf'])
 
     iterator = data_set.make_one_shot_iterator()
     frames_batch, labels_batch, metadata, ini, end = iterator.get_next()
