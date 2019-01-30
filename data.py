@@ -1,7 +1,7 @@
 import os
 import tensorflow as tf
 import numpy as np
-import cv2
+import json
 
 
 class MyStr(str):
@@ -52,15 +52,21 @@ class DataWindowGenerator:
                     video_name = item.split('.')[0].split('batch')[0][:-1]
 
                     available_formats = ['.mkv', '.webm', '.mp4']
-                    video_path = vformat = None
+                    vformat = None
                     for vformat in available_formats:
                         video_path = os.path.join(
                             self.params['videos_folder'], self.mode, video_name + vformat)
                         if os.path.isfile(video_path):
                             break
 
-                    cap = cv2.VideoCapture(video_path)
-                    fps = cap.get(cv2.CAP_PROP_FPS)
+                    with open(self.params['fps_metadata']) as data_file:
+                        video_metadata_json = json.load(data_file)
+
+                    if video_name not in video_metadata_json:
+                        break
+
+                    fps = video_metadata_json[video_name]['fps']
+
                     metadata = {
                         'video_id': video_name + vformat
                     }
@@ -164,7 +170,7 @@ def _concat_frames_in_volume(data_frame_label):
 def input_fn(data_gen, train, params):
     h, w, c = params['feature_maps_size']
     m = params['classes_amount']
-    f = params['max_frames'][0]
+    f = params['window_size']
 
     data_set = tf.data.Dataset.from_generator(
         generator=data_gen,
