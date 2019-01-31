@@ -52,7 +52,7 @@ def compute_threshold_map(prediction, ground_truth, metadata, parameters):
                 true_positive = 0
                 false_positive = 0
                                 
-                for list_indice,ground_truth_key_item in enumerate(ground_truth_key):
+                for ground_truth_key_item in ground_truth_key:
                     
                     predicted_label = predicted_segment['label']
                     truth_label = ground_truth_key_item['label']
@@ -64,8 +64,8 @@ def compute_threshold_map(prediction, ground_truth, metadata, parameters):
                         min_1 = predicted_segment['segment'][0][0]
                         max_1 = predicted_segment['segment'][0][1]
 
-                        min_2 = ground_truth_key[list_indice]['segment'][0]
-                        max_2 = ground_truth_key[list_indice]['segment'][1]
+                        min_2 = ground_truth_key_item['segment'][0]
+                        max_2 = ground_truth_key_item['segment'][1]
 
                         union = calc_union(min_1, max_1, min_2, max_2)
                         overlap = calc_overlap(min_1, max_1, min_2, max_2)
@@ -80,8 +80,8 @@ def compute_threshold_map(prediction, ground_truth, metadata, parameters):
 
                     else:
                         
-                        false_positive = 1
-                                
+                        false_positive = 1           
+                
                 if predicted_label in clases_tp.keys():
                     clases_tp[predicted_label] += true_positive
                     clases_fp[predicted_label] += false_positive
