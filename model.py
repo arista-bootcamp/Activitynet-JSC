@@ -11,7 +11,6 @@ def initialize_pretrained_model(base_model_layer='conv_7b'):
 
 
 def _add_fc_layer(inputs, training):
-    """
     # First FC Layer
     model = tf.layers.dense(inputs=inputs, units=4096)
     model = tf.layers.batch_normalization(model, training=training)
@@ -21,9 +20,9 @@ def _add_fc_layer(inputs, training):
     model = tf.layers.dense(inputs=model, units=4096)
     model = tf.layers.batch_normalization(model, training=training)
     model = tf.nn.relu(model)
-    """
+
     # Third FC Layer
-    model = tf.layers.dense(inputs=inputs, units=1000)
+    model = tf.layers.dense(inputs=model, units=1000)
     model = tf.layers.batch_normalization(model, training=training)
     model = tf.nn.relu(model)
 

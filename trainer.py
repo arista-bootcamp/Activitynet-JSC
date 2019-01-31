@@ -3,7 +3,7 @@
 Tensorflow ActivityNet Implementation Training and Evaluation
 """
 
-# floyd run --gpu --env tensorflow-1.12 --data arista/datasets/featuremaps-jsc/1:datasets "python trainer.py"
+# floyd run --gpu --env tensorflow-1.12 --data arista/datasets/featuremaps-jsc/2:datasets "python trainer.py"
 
 # import json
 import argparse

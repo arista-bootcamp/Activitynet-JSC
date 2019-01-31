@@ -1,9 +1,9 @@
 # Directories for dataset and checkpoints
 model_dir: '.temp/checkpoints'
-data_dir: 'data' # '/floyd/input/datasets/data'
+data_dir: '/floyd/input/datasets/data'
 temp_dir: '.temp'
-videos_folder: 'data/videos' # '/floyd/input/datasets/data/videos'
-feature_map_folder: 'data/feature_maps' # '/floyd/input/datasets/data/feature_maps'
+videos_folder: '/floyd/input/datasets/data/videos'
+feature_map_folder: '/floyd/input/datasets/data/feature_maps'
 
 shuffle: True
 skip_frames: 6
@@ -25,11 +25,11 @@ fps_metadata: 'data/videos_metadata.json'
 # Logging and summaries parameters
 eval_steps: 1000
 keep_checkpoint_max: 3
-log_step_count_steps: 20
-save_checkpoints_steps: 20
-save_summary_steps: 20
+log_step_count_steps: 100
+save_checkpoints_steps: 100
+save_summary_steps: 100
 start_delay_secs: 10
-throttle_secs: 10
+throttle_secs: 1800
 
 # Parameters that may affect training
 model: 'gap'
