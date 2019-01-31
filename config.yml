@@ -24,9 +24,9 @@ fps_metadata: 'data/videos_metadata.json'
 
 # Logging and summaries parameters
 eval_steps: 1000
-keep_checkpoint_max: 3
+keep_checkpoint_max: 2
 log_step_count_steps: 100
-save_checkpoints_steps: 100
+save_checkpoints_steps: 1000
 save_summary_steps: 100
 start_delay_secs: 10
 throttle_secs: 1800
